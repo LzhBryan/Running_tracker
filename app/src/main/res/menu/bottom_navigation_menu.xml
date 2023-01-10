@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/dashboard"
+        android:enabled="true"
+        android:icon="@drawable/dashboard"
+        android:title="Dashboard" />
+    <item
+        android:id="@+id/start"
+        android:enabled="true"
+        android:icon="@drawable/run"
+        android:title="Start" />
+    <item
+        android:id="@+id/target"
+        android:enabled="true"
+        android:icon="@drawable/target"
+        android:title="Target" />
+    <item
+        android:id="@+id/me"
+        android:enabled="true"
+        android:icon="@drawable/me"
+        android:title="Me" />
+</menu>
