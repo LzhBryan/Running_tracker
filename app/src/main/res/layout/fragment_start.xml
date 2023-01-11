@@ -1,14 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:columnCount="2"
+    android:rowCount="3"
     tools:context=".ui.StartFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Start" />
+        android:id="@+id/timeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_rowWeight="1"
+        android:layout_columnSpan="2"
+        android:layout_columnWeight="1"
+        android:layout_gravity="center"
+        android:text="Time" />
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/timeCounter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_rowWeight="1"
+        android:layout_columnSpan="2"
+        android:layout_columnWeight="1"
+        android:layout_gravity="center"
+        android:text="00:00"
+        android:textSize="50sp" />
+
+    <TextView
+        android:id="@+id/distanceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_rowWeight="1"
+        android:layout_columnWeight="1"
+        android:layout_gravity="center"
+        android:text="Distance" />
+
+    <TextView
+        android:id="@+id/averagePaceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_rowWeight="1"
+        android:layout_columnWeight="1"
+        android:layout_gravity="center"
+        android:text="Average Pace" />
+
+    <TextView
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_rowWeight="1"
+        android:layout_columnWeight="1"
+        android:layout_gravity="center"
+        android:text="0 km"
+        android:textSize="50sp" />
+
+    <TextView
+        android:id="@+id/averagePace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_rowWeight="1"
+        android:layout_columnWeight="1"
+        android:layout_gravity="center"
+        android:text="0/km"
+        android:textSize="50sp" />
+
+    <ImageButton
+        android:id="@+id/play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:scaleX="2"
+        android:scaleY="2"
+        android:layout_marginRight="50sp"
+        android:layout_marginBottom="20sp"
+        android:src="@drawable/play_button" />
+
+    <ImageButton
+        android:id="@+id/stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:scaleX="2"
+        android:scaleY="2"
+        android:layout_marginLeft="50sp"
+        android:layout_marginBottom="20sp"
+        android:src="@drawable/stop_button" />
+
+</GridLayout>

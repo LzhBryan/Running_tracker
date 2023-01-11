@@ -48,6 +48,18 @@ public class TrackingService extends Service {
         }
     }
 
+    public class TrackingThread extends Thread {
+
+        public TrackingThread() {
+        }
+
+        @Override
+        public void run() {
+
+
+        }
+    }
+
     public void trackLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest locationRequest = new
