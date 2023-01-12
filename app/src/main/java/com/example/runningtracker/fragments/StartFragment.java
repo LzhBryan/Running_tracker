@@ -1,8 +1,10 @@
 package com.example.runningtracker.fragments;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -16,7 +18,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -25,13 +26,24 @@ import com.example.runningtracker.R;
 import com.example.runningtracker.databinding.FragmentStartBinding;
 import com.example.runningtracker.services.TrackingService;
 import com.example.runningtracker.viewmodels.StartFragmentViewModel;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class StartFragment extends Fragment {
 
+    private static final int REQUEST_CHECK_SETTINGS = 101;
     private TrackingService.MyBinder myService = null;
     private ImageButton playButton;
     private ImageButton stopButton;
     private StartFragmentViewModel startFragmentViewModel;
+    private boolean isLocationPermissionGranted;
+    private boolean isGpsOn;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -81,7 +93,7 @@ public class StartFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         FragmentStartBinding binding = FragmentStartBinding.inflate(inflater,
                 container, false);
@@ -98,6 +110,13 @@ public class StartFragment extends Fragment {
 
     public void onClickRun() {
         checkLocationPermission();
+        if (isLocationPermissionGranted) {
+            createLocationRequest();
+            if (isGpsOn) {
+                requireActivity().startForegroundService(new Intent(requireActivity()
+                        , TrackingService.class));
+            }
+        }
     }
 
     public void onClickStop() {
@@ -117,15 +136,13 @@ public class StartFragment extends Fragment {
         }
     };
 
-
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(
                 requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
-            requireActivity().startForegroundService(new Intent(requireActivity()
-                    , TrackingService.class));
+            isLocationPermissionGranted = true;
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            new AlertDialog.Builder(requireActivity())
+            new MaterialAlertDialogBuilder(requireActivity(), R.style.RoundShapeTheme)
                     .setTitle("Location Permission Needed")
                     .setMessage("This app needs the Location permission, please accept to use location functionality")
                     .setPositiveButton("OK", (dialogInterface, i) ->
@@ -142,10 +159,10 @@ public class StartFragment extends Fragment {
     private ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
-                    requireActivity().startForegroundService(new Intent(requireActivity()
-                            , TrackingService.class));
+                    isLocationPermissionGranted = true;
                 } else {
-                    new AlertDialog.Builder(requireActivity())
+                    new MaterialAlertDialogBuilder(requireActivity(),
+                            R.style.RoundShapeTheme)
                             .setTitle("Location permission needed")
                             .setMessage("Can't track your running without " +
                                     "location access")
@@ -153,9 +170,49 @@ public class StartFragment extends Fragment {
                                     dialogInterface.cancel())
                             .create()
                             .show();
+                    isLocationPermissionGranted = false;
                 }
             });
 
+    protected void createLocationRequest() {
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        SettingsClient client = LocationServices.getSettingsClient(requireActivity());
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        task.addOnSuccessListener(requireActivity(),
+                locationSettingsResponse -> {
+                    isGpsOn = true;
+                    requireActivity().startForegroundService(new Intent(requireActivity()
+                            , TrackingService.class));
+                });
+        task.addOnFailureListener(requireActivity(), e -> {
+            if (e instanceof ResolvableApiException) {
+                try {
+                    ResolvableApiException resolvable = (ResolvableApiException) e;
+                    resolvable.startResolutionForResult(requireActivity(),
+                            REQUEST_CHECK_SETTINGS);
+                } catch (IntentSender.SendIntentException sendEx) {
+                    sendEx.printStackTrace();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            if (resultCode == Activity.RESULT_OK) {
+                isGpsOn = true;
+                requireActivity().startForegroundService(new Intent(requireActivity()
+                        , TrackingService.class));
+            }
+        }
+    }
 }
 
 

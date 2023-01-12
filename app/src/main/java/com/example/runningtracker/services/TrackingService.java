@@ -8,7 +8,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Looper;
@@ -20,15 +19,12 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.runningtracker.R;
 import com.example.runningtracker.activities.MainActivity;
-import com.example.runningtracker.fragments.StartFragment;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
-
-import java.util.Timer;
 
 public class TrackingService extends Service {
 
@@ -119,7 +115,8 @@ public class TrackingService extends Service {
     public void trackLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest locationRequest = new
-                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build();
+                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,
+                5000).build();
 
         // TODO: Request user for location permission
 
