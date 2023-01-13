@@ -39,7 +39,7 @@
             android:layout_columnSpan="2"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:textSize="120sp" />
+            android:textSize="80sp" />
 
         <TextView
             android:id="@+id/distanceText"
@@ -69,7 +69,7 @@
             android:layout_columnWeight="1"
             android:layout_gravity="center"
             android:layout_marginBottom="40sp"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
 
         <TextView
             android:id="@+id/averagePace"
@@ -79,7 +79,7 @@
             android:layout_columnWeight="1"
             android:layout_gravity="center"
             android:layout_marginBottom="40sp"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
 
         <ImageButton
             android:id="@+id/service"

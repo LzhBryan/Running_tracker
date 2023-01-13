@@ -35,8 +35,11 @@ public class TrackingService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private NotificationManager notificationManager;
-    private Location firstLocation;
+    private NotificationCompat.Builder builder;
+    private Location previousLocation;
     private volatile boolean running;
+    private volatile boolean pausing;
+    private final Object pauseLock = new Object();
     private TrackingThread trackingThread;
     private int trackingSeconds = 0;
     private float trackingPace = 0;
@@ -83,13 +86,16 @@ public class TrackingService extends Service {
     }
 
     private void pauseTracking() {
-        running = false;
-        trackingThread.interrupt();
+        pausing = true;
+        fusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
     private void continueTracking() {
-        running = true;
-        trackingThread.start();
+        synchronized (pauseLock) {
+            pausing = false;
+            pauseLock.notifyAll();
+            trackLocation();
+        }
     }
 
     public class MyBinder extends Binder implements IInterface {
@@ -99,10 +105,6 @@ public class TrackingService extends Service {
 
         public void play() {
             continueTracking();
-        }
-
-        public void stop() {
-            stopTracking();
         }
 
         ICallback callback;
@@ -122,7 +124,6 @@ public class TrackingService extends Service {
         }
     }
 
-
     RemoteCallbackList<MyBinder> remoteCallbackList = new RemoteCallbackList<>();
 
     public class TrackingThread extends Thread {
@@ -130,16 +131,39 @@ public class TrackingService extends Service {
         public TrackingThread() {
             trackingSeconds = 0;
             trackingPace = 0;
-            distance  = 0;
+            distance = 0;
         }
 
         @Override
         public void run() {
             while (running) {
-                System.out.println(currentThread());
+                synchronized (pauseLock) {
+                    if (!running) {
+                        break;
+                    }
+
+                    if (pausing) {
+                        try {
+                            pauseLock.wait();
+                        } catch (InterruptedException ex) {
+                            break;
+                        }
+
+                        if (!running) {
+                            break;
+                        }
+                    }
+                }
                 doCallbacks();
                 trackingSeconds += 1;
-                System.out.println(trackingSeconds);
+                trackingPace =
+                        ((float) trackingSeconds / 60) / (distance / 1000);
+                System.out.println(trackingPace);
+                if (builder != null) {
+                    System.out.println(formatRunningTime());
+                    builder.setContentText("Time elapsed: " + formatRunningTime());
+                    builder.build();
+                }
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -175,41 +199,54 @@ public class TrackingService extends Service {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, notificationIntent,
                         PendingIntent.FLAG_IMMUTABLE);
-
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
+        builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Running Tracker")
-                .setContentText("Running")
+                .setContentText("Time elpased: 00:00:00")
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentIntent(pendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .build();
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        return builder.build();
+    }
+
+    private String formatRunningTime() {
+        int trackHour = trackingSeconds / 3600;
+        int trackMinute = (trackingSeconds - (3600 * trackHour)) / 60;
+        trackingSeconds =
+                (trackingSeconds - (3600 * trackHour) - (trackMinute * 60));
+        return String.format("%02d:%02d:%02d",
+                trackHour, trackMinute, trackingSeconds);
     }
 
     public void trackLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest locationRequest = new
                 LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,
-                1000).build();
+                100).build();
 
-        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
-            if (location != null) {
-                firstLocation = location;
-                System.out.println(firstLocation);
-            }
-        }).addOnFailureListener(location -> {
+        try {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,
+                    null).addOnSuccessListener(location -> {
+                if (location != null) {
+                    previousLocation = location;
+                }
+            }).addOnFailureListener(location -> {
 
-        });
-
+            });
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
 
         locationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(@NonNull LocationResult
-                                                 locationResult) {
-                Location previousLocation = locationResult.getLastLocation();
-
+            public void onLocationResult(@NonNull LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    float distance = location.distanceTo(firstLocation);
-                    Log.d("comp3018", "location " + distance);
+                    float distanceTravelled =
+                            location.distanceTo(previousLocation);
+                    Log.d("comp3018",
+                            "distance travelled " + distanceTravelled);
+                    distance += distanceTravelled;
+                    System.out.println("Total distance" + distance);
+                    previousLocation = location;
                 }
             }
         };
@@ -218,8 +255,7 @@ public class TrackingService extends Service {
             fusedLocationClient.requestLocationUpdates(locationRequest,
                     locationCallback,
                     Looper.getMainLooper());
-        } catch (
-                SecurityException e) {
+        } catch (SecurityException e) {
             e.printStackTrace();
         }
     }

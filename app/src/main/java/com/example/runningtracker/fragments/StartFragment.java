@@ -62,15 +62,24 @@ public class StartFragment extends Fragment {
         }
 
         final Observer<Integer> trackingCounterObserver =
-                lambda -> trackingCounter.setText(String.valueOf(startFragmentViewModel.getTrackingCounter().getValue()));
+                lambda -> {
+                    int trackSeconds =
+                            startFragmentViewModel.getTrackingCounter().getValue();
+                    int trackHour = trackSeconds / 3600;
+                    int trackMinute = (trackSeconds - (3600 * trackHour)) / 60;
+                    trackSeconds =
+                            (trackSeconds - (3600 * trackHour) - (trackMinute * 60));
+                    trackingCounter.setText(String.format("%02d:%02d:%02d",
+                            trackHour, trackMinute, trackSeconds));
+                };
 
         final Observer<Float> trackingPaceObserver =
-                lambda -> averagePace.setText(String.format("%s /km", startFragmentViewModel.getTrackingPace().getValue()));
+                lambda -> averagePace.setText(String.format("%.2f minute/km",
+                        startFragmentViewModel.getTrackingPace().getValue()));
 
         final Observer<Float> totalDistanceObserver =
-                lambda -> totalDistance.setText(String.format(
-                        "%s km",
-                        startFragmentViewModel.getTotalDistance().getValue()));
+                lambda -> totalDistance.setText(String.format("%.2f km",
+                        startFragmentViewModel.getTotalDistance().getValue() / 1000));
 
         startFragmentViewModel.getTrackingCounter().observe(getViewLifecycleOwner(), trackingCounterObserver);
         startFragmentViewModel.getTrackingPace().observe(getViewLifecycleOwner(), trackingPaceObserver);
