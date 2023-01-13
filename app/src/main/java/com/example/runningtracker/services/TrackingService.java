@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Binder;
@@ -72,7 +73,8 @@ public class TrackingService extends Service {
             trackingThread = new TrackingThread();
             running = true;
             trackingThread.start();
-            Notification foregroundNotification = buildForegroundNotification();
+            Notification foregroundNotification =
+                    buildForegroundNotification("0");
             startForeground(ONGOING_NOTIFICATION_ID, foregroundNotification);
             trackLocation();
         }
@@ -159,11 +161,7 @@ public class TrackingService extends Service {
                 trackingPace =
                         ((float) trackingSeconds / 60) / (distance / 1000);
                 System.out.println(trackingPace);
-                if (builder != null) {
-                    System.out.println(formatRunningTime());
-                    builder.setContentText("Time elapsed: " + formatRunningTime());
-                    builder.build();
-                }
+                updateNotification();
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -193,28 +191,35 @@ public class TrackingService extends Service {
         notificationManager.createNotificationChannel(channel);
     }
 
-    private Notification buildForegroundNotification() {
+    private Notification buildForegroundNotification(String elapsedTime) {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.putExtra("redirect", "startFragment");
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, notificationIntent,
                         PendingIntent.FLAG_IMMUTABLE);
-        builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Running Tracker")
-                .setContentText("Time elpased: 00:00:00")
+                .setContentText("Time elpased: " + elapsedTime)
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentIntent(pendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        return builder.build();
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setOnlyAlertOnce(true)
+                .build();
     }
 
-    private String formatRunningTime() {
+    private void updateNotification() {
         int trackHour = trackingSeconds / 3600;
         int trackMinute = (trackingSeconds - (3600 * trackHour)) / 60;
         trackingSeconds =
                 (trackingSeconds - (3600 * trackHour) - (trackMinute * 60));
-        return String.format("%02d:%02d:%02d",
+        String elapsedTime = String.format("%02d:%02d:%02d",
                 trackHour, trackMinute, trackingSeconds);
+
+        Notification notification = buildForegroundNotification(elapsedTime);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(ONGOING_NOTIFICATION_ID, notification);
     }
 
     public void trackLocation() {
