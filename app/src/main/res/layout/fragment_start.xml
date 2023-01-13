@@ -3,9 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="fragment"
             type="com.example.runningtracker.fragments.StartFragment" />
+
+        <variable
+            name="viewModel"
+            type="com.example.runningtracker.viewmodels.StartFragmentViewModel" />
     </data>
 
     <GridLayout
@@ -75,28 +80,29 @@
             android:textSize="50sp" />
 
         <ImageButton
-            android:id="@+id/play"
+            android:id="@+id/service"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:scaleX="2"
-            android:scaleY="2"
-            android:onClick="@{() -> fragment.onClickRun()}"
             android:layout_marginEnd="50sp"
-            android:layout_marginBottom="20sp"
-            android:src="@drawable/play_button" />
+            android:layout_marginBottom="50sp"
+            android:background="@color/white"
+            android:onClick="@{() -> fragment.onClickRun()}"
+            android:scaleX="2"
+            android:scaleY="2" />
 
         <ImageButton
             android:id="@+id/stop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:scaleX="2"
-            android:scaleY="2"
-            android:onClick="@{() -> fragment.onClickStop()}"
             android:layout_marginStart="50sp"
-            android:layout_marginBottom="20sp"
-            android:src="@drawable/stop_button" />
+            android:layout_marginBottom="50sp"
+            android:background="@color/white"
+            android:onClick="@{() -> fragment.onClickStop()}"
+            android:scaleX="2.7"
+            android:scaleY="2.7"
+            android:src="@drawable/btn_stop" />
 
     </GridLayout>
 </layout>

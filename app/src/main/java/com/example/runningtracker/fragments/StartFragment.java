@@ -3,6 +3,7 @@ package com.example.runningtracker.fragments;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
@@ -20,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.runningtracker.R;
@@ -39,57 +41,32 @@ public class StartFragment extends Fragment {
 
     private static final int REQUEST_CHECK_SETTINGS = 101;
     private TrackingService.MyBinder myService = null;
-    private ImageButton playButton;
-    private ImageButton stopButton;
     private StartFragmentViewModel startFragmentViewModel;
-    private boolean isLocationPermissionGranted;
-    private boolean isGpsOn;
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public StartFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment StartFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static StartFragment newInstance(String param1, String param2) {
-        StartFragment fragment = new StartFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private ImageButton serviceButton;
+    private ImageButton stopButton;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         startFragmentViewModel =
                 new ViewModelProvider(requireActivity()).get(StartFragmentViewModel.class);
-    }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        final Observer<Boolean> isServiceRunningObserver = Boolean -> {
+            if (startFragmentViewModel.getIsServiceRunning().getValue()) {
+                serviceButton.setImageResource(R.drawable.btn_pause);
+                stopButton.setEnabled(true);
+                stopButton.setAlpha(1f);
+                stopButton.setClickable(true);
+            } else {
+                serviceButton.setImageResource(R.drawable.btn_play);
+                stopButton.setEnabled(false);
+                stopButton.setAlpha(.5f);
+                stopButton.setClickable(false);
+            }
+        };
+
+        startFragmentViewModel.getIsServiceRunning().observe(getViewLifecycleOwner(),
+                isServiceRunningObserver);
     }
 
     @Override
@@ -101,27 +78,34 @@ public class StartFragment extends Fragment {
                 new ViewModelProvider(this).get(StartFragmentViewModel.class);
         binding.setFragment(this);
         View rootView = binding.getRoot();
-
-        playButton = rootView.findViewById(R.id.play);
+        serviceButton = rootView.findViewById(R.id.service);
         stopButton = rootView.findViewById(R.id.stop);
-
+        requireActivity().bindService(new Intent(requireActivity(),
+                TrackingService.class), serviceConnection,
+                Context.BIND_AUTO_CREATE);
         return rootView;
     }
 
     public void onClickRun() {
-        checkLocationPermission();
-        if (isLocationPermissionGranted) {
-            createLocationRequest();
-            if (isGpsOn) {
-                requireActivity().startForegroundService(new Intent(requireActivity()
-                        , TrackingService.class));
+        if (!startFragmentViewModel.getIsServiceRunning().getValue()) {
+            checkLocationPermission();
+            if (startFragmentViewModel.isLocationPermissionGranted()) {
+                createLocationRequest();
+                if (startFragmentViewModel.isGpsOn()) {
+                    requireActivity().startForegroundService(new Intent(requireActivity()
+                            , TrackingService.class));
+                    startFragmentViewModel.setServiceRunning(true);
+                }
             }
+        } else {
+            // binder
         }
     }
 
     public void onClickStop() {
-        requireActivity().stopService(new Intent(requireActivity()
-                , TrackingService.class));
+        requireActivity().startService(new Intent(requireActivity()
+                , TrackingService.class).setAction("stop"));
+        startFragmentViewModel.setServiceRunning(false);
     }
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -140,7 +124,7 @@ public class StartFragment extends Fragment {
         if (ContextCompat.checkSelfPermission(
                 requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
-            isLocationPermissionGranted = true;
+            startFragmentViewModel.setLocationPermissionGranted(true);
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
             new MaterialAlertDialogBuilder(requireActivity(), R.style.RoundShapeTheme)
                     .setTitle("Location Permission Needed")
@@ -159,7 +143,7 @@ public class StartFragment extends Fragment {
     private ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
-                    isLocationPermissionGranted = true;
+                    startFragmentViewModel.setLocationPermissionGranted(true);
                 } else {
                     new MaterialAlertDialogBuilder(requireActivity(),
                             R.style.RoundShapeTheme)
@@ -170,7 +154,7 @@ public class StartFragment extends Fragment {
                                     dialogInterface.cancel())
                             .create()
                             .show();
-                    isLocationPermissionGranted = false;
+                    startFragmentViewModel.setLocationPermissionGranted(false);
                 }
             });
 
@@ -185,9 +169,10 @@ public class StartFragment extends Fragment {
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
         task.addOnSuccessListener(requireActivity(),
                 locationSettingsResponse -> {
-                    isGpsOn = true;
+                    startFragmentViewModel.setGpsOn(true);
                     requireActivity().startForegroundService(new Intent(requireActivity()
                             , TrackingService.class));
+                    startFragmentViewModel.setServiceRunning(true);
                 });
         task.addOnFailureListener(requireActivity(), e -> {
             if (e instanceof ResolvableApiException) {
@@ -207,9 +192,10 @@ public class StartFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             if (resultCode == Activity.RESULT_OK) {
-                isGpsOn = true;
+                startFragmentViewModel.setGpsOn(true);
                 requireActivity().startForegroundService(new Intent(requireActivity()
                         , TrackingService.class));
+                startFragmentViewModel.setServiceRunning(true);
             }
         }
     }
