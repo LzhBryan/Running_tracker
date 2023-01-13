@@ -2,18 +2,16 @@ package com.example.runningtracker.fragments;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -40,10 +38,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 public class StartFragment extends Fragment {
 
     private static final int REQUEST_CHECK_SETTINGS = 101;
-    private TrackingService.MyBinder myService = null;
     private StartFragmentViewModel startFragmentViewModel;
     private ImageButton serviceButton;
     private ImageButton stopButton;
+    private TextView trackingCounter;
+    private TextView averagePace;
+    private TextView totalDistance;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -51,22 +51,30 @@ public class StartFragment extends Fragment {
         startFragmentViewModel =
                 new ViewModelProvider(requireActivity()).get(StartFragmentViewModel.class);
 
-        final Observer<Boolean> isServiceRunningObserver = Boolean -> {
-            if (startFragmentViewModel.getIsServiceRunning().getValue()) {
-                serviceButton.setImageResource(R.drawable.btn_pause);
-                stopButton.setEnabled(true);
-                stopButton.setAlpha(1f);
-                stopButton.setClickable(true);
+        if (startFragmentViewModel.getIsServiceRunning()) {
+            if (startFragmentViewModel.isServiceOnPause()) {
+                switchToPlayBtn();
             } else {
-                serviceButton.setImageResource(R.drawable.btn_play);
-                stopButton.setEnabled(false);
-                stopButton.setAlpha(.5f);
-                stopButton.setClickable(false);
+                switchToPauseBtn();
             }
-        };
+        } else {
+            switchToPlayBtn();
+        }
 
-        startFragmentViewModel.getIsServiceRunning().observe(getViewLifecycleOwner(),
-                isServiceRunningObserver);
+        final Observer<Integer> trackingCounterObserver =
+                lambda -> trackingCounter.setText(String.valueOf(startFragmentViewModel.getTrackingCounter().getValue()));
+
+        final Observer<Float> trackingPaceObserver =
+                lambda -> averagePace.setText(String.format("%s /km", startFragmentViewModel.getTrackingPace().getValue()));
+
+        final Observer<Float> totalDistanceObserver =
+                lambda -> totalDistance.setText(String.format(
+                        "%s km",
+                        startFragmentViewModel.getTotalDistance().getValue()));
+
+        startFragmentViewModel.getTrackingCounter().observe(getViewLifecycleOwner(), trackingCounterObserver);
+        startFragmentViewModel.getTrackingPace().observe(getViewLifecycleOwner(), trackingPaceObserver);
+        startFragmentViewModel.getTotalDistance().observe(getViewLifecycleOwner(), totalDistanceObserver);
     }
 
     @Override
@@ -75,19 +83,22 @@ public class StartFragment extends Fragment {
         FragmentStartBinding binding = FragmentStartBinding.inflate(inflater,
                 container, false);
         startFragmentViewModel =
-                new ViewModelProvider(this).get(StartFragmentViewModel.class);
+                new ViewModelProvider(requireActivity()).get(StartFragmentViewModel.class);
         binding.setFragment(this);
         View rootView = binding.getRoot();
         serviceButton = rootView.findViewById(R.id.service);
         stopButton = rootView.findViewById(R.id.stop);
+        trackingCounter = rootView.findViewById(R.id.trackingCounter);
+        averagePace = rootView.findViewById(R.id.averagePace);
+        totalDistance = rootView.findViewById(R.id.totalDistance);
         requireActivity().bindService(new Intent(requireActivity(),
-                TrackingService.class), serviceConnection,
+                        TrackingService.class), startFragmentViewModel.getServiceConnection(),
                 Context.BIND_AUTO_CREATE);
         return rootView;
     }
 
     public void onClickRun() {
-        if (!startFragmentViewModel.getIsServiceRunning().getValue()) {
+        if (!startFragmentViewModel.getIsServiceRunning()) {
             checkLocationPermission();
             if (startFragmentViewModel.isLocationPermissionGranted()) {
                 createLocationRequest();
@@ -95,30 +106,48 @@ public class StartFragment extends Fragment {
                     requireActivity().startForegroundService(new Intent(requireActivity()
                             , TrackingService.class));
                     startFragmentViewModel.setServiceRunning(true);
+                    startFragmentViewModel.setServiceOnPause(false);
+                    switchToPauseBtn();
                 }
             }
         } else {
-            // binder
+            if (!startFragmentViewModel.isServiceOnPause()) {
+                startFragmentViewModel.getMyService().pause();
+                switchToPlayBtn();
+                startFragmentViewModel.setServiceOnPause(true);
+            } else {
+                startFragmentViewModel.getMyService().play();
+                switchToPauseBtn();
+                startFragmentViewModel.setServiceOnPause(false);
+            }
         }
     }
 
     public void onClickStop() {
-        requireActivity().startService(new Intent(requireActivity()
-                , TrackingService.class).setAction("stop"));
+        Intent stop = new Intent(requireActivity(), TrackingService.class);
+        stop.putExtra("stop", 1);
+        requireActivity().startService(stop);
+        requireActivity().unbindService(startFragmentViewModel.getServiceConnection());
+        startFragmentViewModel.setMyService(null);
         startFragmentViewModel.setServiceRunning(false);
+        switchToPlayBtn();
     }
 
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            myService = (TrackingService.MyBinder) iBinder;
+    private void switchToPlayBtn() {
+        serviceButton.setImageResource(R.drawable.btn_play);
+        if (!startFragmentViewModel.getIsServiceRunning()) {
+            stopButton.setEnabled(false);
+            stopButton.setAlpha(.5f);
+            stopButton.setClickable(false);
         }
+    }
 
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            myService = null;
-        }
-    };
+    private void switchToPauseBtn() {
+        serviceButton.setImageResource(R.drawable.btn_pause);
+        stopButton.setEnabled(true);
+        stopButton.setAlpha(1f);
+        stopButton.setClickable(true);
+    }
 
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(
@@ -169,10 +198,14 @@ public class StartFragment extends Fragment {
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
         task.addOnSuccessListener(requireActivity(),
                 locationSettingsResponse -> {
-                    startFragmentViewModel.setGpsOn(true);
-                    requireActivity().startForegroundService(new Intent(requireActivity()
-                            , TrackingService.class));
-                    startFragmentViewModel.setServiceRunning(true);
+                    if (!startFragmentViewModel.isGpsOn()) {
+                        requireActivity().startForegroundService(new Intent(requireActivity()
+                                , TrackingService.class));
+                        switchToPauseBtn();
+                        startFragmentViewModel.setServiceRunning(true);
+                        startFragmentViewModel.setServiceOnPause(false);
+                        startFragmentViewModel.setGpsOn(true);
+                    }
                 });
         task.addOnFailureListener(requireActivity(), e -> {
             if (e instanceof ResolvableApiException) {
@@ -195,10 +228,19 @@ public class StartFragment extends Fragment {
                 startFragmentViewModel.setGpsOn(true);
                 requireActivity().startForegroundService(new Intent(requireActivity()
                         , TrackingService.class));
+                switchToPauseBtn();
                 startFragmentViewModel.setServiceRunning(true);
+                startFragmentViewModel.setServiceOnPause(false);
             }
         }
     }
+
+    @Override
+    public void onDestroy() {
+        if (startFragmentViewModel.getMyService() != null) {
+            requireActivity().unbindService(startFragmentViewModel.getServiceConnection());
+            startFragmentViewModel.setMyService(null);
+        }
+        super.onDestroy();
+    }
 }
-
-
