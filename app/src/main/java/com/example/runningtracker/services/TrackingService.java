@@ -22,6 +22,7 @@ import androidx.core.app.NotificationCompat;
 import com.example.runningtracker.R;
 import com.example.runningtracker.activities.MainActivity;
 import com.example.runningtracker.activities.RunResultActivity;
+import com.example.runningtracker.fragments.StartFragment;
 import com.example.runningtracker.interfaces.ICallback;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -199,6 +200,11 @@ public class TrackingService extends Service {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, notificationIntent,
                         PendingIntent.FLAG_IMMUTABLE);
+
+        Intent stopnotificationIntent = new Intent(this, TrackingService.class);
+        stopnotificationIntent.putExtra(RunResultActivity.STOP_SERVICE, 1);
+        PendingIntent Intent = PendingIntent.getService(this, 0, stopnotificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Running Tracker")
                 .setContentText("Time elapsed: " + elapsedTime)
@@ -206,6 +212,7 @@ public class TrackingService extends Service {
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setOnlyAlertOnce(true)
+                .addAction(R.drawable.btn_stop, "Stop running", Intent)
                 .build();
     }
 
