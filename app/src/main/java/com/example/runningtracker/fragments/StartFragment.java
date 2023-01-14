@@ -23,6 +23,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.runningtracker.R;
+import com.example.runningtracker.activities.RunResultActivity;
 import com.example.runningtracker.databinding.FragmentStartBinding;
 import com.example.runningtracker.services.TrackingService;
 import com.example.runningtracker.viewmodels.StartFragmentViewModel;
@@ -36,8 +37,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class StartFragment extends Fragment {
-
     private static final int REQUEST_CHECK_SETTINGS = 101;
+    public static final String TOTAL_DISTANCE = "TOTAL_DISTANCE";
+    public static final String AVERAGE_PACE = "AVERAGE_PACE";
+    public static final String TOTAL_TIME = "TOTAL_TIME";
+    public static final int REQUEST_STOP_SERVICE = 1;
     private StartFragmentViewModel startFragmentViewModel;
     private ImageButton serviceButton;
     private ImageButton stopButton;
@@ -133,13 +137,18 @@ public class StartFragment extends Fragment {
     }
 
     public void onClickStop() {
-        Intent stop = new Intent(requireActivity(), TrackingService.class);
-        stop.putExtra("stop", 1);
-        requireActivity().startService(stop);
+        startFragmentViewModel.getMyService().pause();
+        switchToPlayBtn();
+        startFragmentViewModel.setServiceOnPause(true);
         requireActivity().unbindService(startFragmentViewModel.getServiceConnection());
         startFragmentViewModel.setMyService(null);
-        startFragmentViewModel.setServiceRunning(false);
-        switchToPlayBtn();
+        Intent runResultIntent = new Intent(requireActivity(),
+                RunResultActivity.class);
+        runResultIntent.putExtra(TOTAL_DISTANCE,
+                startFragmentViewModel.getTotalDistance().getValue());
+        runResultIntent.putExtra(AVERAGE_PACE, startFragmentViewModel.getTrackingPace().getValue());
+        runResultIntent.putExtra(TOTAL_TIME, startFragmentViewModel.getTrackingCounter().getValue());
+        startActivityForResult(runResultIntent, REQUEST_STOP_SERVICE);
     }
 
     private void switchToPlayBtn() {
@@ -241,15 +250,40 @@ public class StartFragment extends Fragment {
                 startFragmentViewModel.setServiceRunning(true);
                 startFragmentViewModel.setServiceOnPause(false);
             }
+        } else if (requestCode == REQUEST_STOP_SERVICE) {
+            if (resultCode == Activity.RESULT_OK) {
+                boolean isServiceRunning =
+                        data.getBooleanExtra(RunResultActivity.SERVICE_STATUS
+                                , true);
+                if (!isServiceRunning) {
+                    startFragmentViewModel.setServiceOnPause(false);
+                    startFragmentViewModel.setServiceRunning(false);
+                    startFragmentViewModel.setTotalDistance(0);
+                    startFragmentViewModel
+                            .setTrackingCounter(0);
+                    startFragmentViewModel.setTrackingPace(0);
+                }
+            }
         }
     }
 
     @Override
-    public void onDestroy() {
+    public void onResume() {
+        switchToPlayBtn();
+        if (startFragmentViewModel.getMyService() == null) {
+            requireActivity().bindService(new Intent(requireActivity(),
+                            TrackingService.class), startFragmentViewModel.getServiceConnection(),
+                    Context.BIND_AUTO_CREATE);
+        }
+        super.onResume();
+    }
+
+    @Override
+    public void onStop() {
         if (startFragmentViewModel.getMyService() != null) {
             requireActivity().unbindService(startFragmentViewModel.getServiceConnection());
             startFragmentViewModel.setMyService(null);
         }
-        super.onDestroy();
+        super.onStop();
     }
 }

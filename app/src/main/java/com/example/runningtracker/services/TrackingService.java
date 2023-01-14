@@ -21,6 +21,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.runningtracker.R;
 import com.example.runningtracker.activities.MainActivity;
+import com.example.runningtracker.activities.RunResultActivity;
 import com.example.runningtracker.interfaces.ICallback;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -36,7 +37,6 @@ public class TrackingService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private NotificationManager notificationManager;
-    private NotificationCompat.Builder builder;
     private Location previousLocation;
     private volatile boolean running;
     private volatile boolean pausing;
@@ -60,7 +60,7 @@ public class TrackingService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        int stop = intent.getIntExtra("stop", 0);
+        int stop = intent.getIntExtra(RunResultActivity.STOP_SERVICE, 0);
         if (stop == 1) {
             trackingThread.interrupt();
             running = false;
@@ -157,11 +157,13 @@ public class TrackingService extends Service {
                     }
                 }
                 doCallbacks();
+                updateNotification();
                 trackingSeconds += 1;
                 trackingPace =
                         ((float) trackingSeconds / 60) / (distance / 1000);
-                System.out.println(trackingPace);
-                updateNotification();
+                if (trackingPace == Float.POSITIVE_INFINITY) {
+                    trackingPace = 0;
+                }
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -199,7 +201,7 @@ public class TrackingService extends Service {
                         PendingIntent.FLAG_IMMUTABLE);
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Running Tracker")
-                .setContentText("Time elpased: " + elapsedTime)
+                .setContentText("Time elapsed: " + elapsedTime)
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -245,13 +247,15 @@ public class TrackingService extends Service {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    float distanceTravelled =
-                            location.distanceTo(previousLocation);
-                    Log.d("comp3018",
-                            "distance travelled " + distanceTravelled);
-                    distance += distanceTravelled;
-                    System.out.println("Total distance" + distance);
-                    previousLocation = location;
+                    if (location != null) {
+                        float distanceTravelled =
+                                location.distanceTo(previousLocation);
+                        Log.d("comp3018",
+                                "distance travelled " + distanceTravelled);
+                        distance += distanceTravelled;
+                        System.out.println("Total distance" + distance);
+                        previousLocation = location;
+                    }
                 }
             }
         };
