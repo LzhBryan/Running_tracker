@@ -9,4 +9,9 @@
     <string name="stop_button">stop button</string>
     <string name="discard_button">discard button</string>
     <string name="save_activity">Save activity</string>
+    <string name="total_distance">Total distance</string>
+    <string name="duration">Duration</string>
+    <string name="additional_notes">Additional notes</string>
+    <string name="how_did_it_go">How did it go?</string>
+    <string name="tag_button">Tag button</string>
 </resources>

@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="fragment"
             type="com.example.runningtracker.fragments.StartFragment" />
@@ -27,9 +26,9 @@
             android:layout_rowWeight="1"
             android:layout_columnSpan="2"
             android:layout_columnWeight="1"
-            android:textSize="30sp"
             android:layout_gravity="center"
-            android:text="@string/time" />
+            android:text="@string/time"
+            android:textSize="30sp" />
 
         <TextView
             android:id="@+id/trackingCounter"
@@ -48,8 +47,8 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:textSize="30sp"
-            android:text="@string/distance" />
+            android:text="@string/distance"
+            android:textSize="30sp" />
 
         <TextView
             android:id="@+id/averagePaceText"
@@ -58,8 +57,8 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:textSize="30sp"
-            android:text="@string/average_pace" />
+            android:text="@string/average_pace"
+            android:textSize="30sp" />
 
         <TextView
             android:id="@+id/totalDistance"
@@ -89,10 +88,10 @@
             android:layout_marginEnd="50sp"
             android:layout_marginBottom="50sp"
             android:background="@color/white"
+            android:contentDescription="@string/play_or_pause_button"
             android:onClick="@{() -> fragment.onClickRun()}"
             android:scaleX="2"
-            android:scaleY="2"
-            android:contentDescription="@string/play_or_pause_button" />
+            android:scaleY="2" />
 
         <ImageButton
             android:id="@+id/stop"
@@ -102,11 +101,11 @@
             android:layout_marginStart="50sp"
             android:layout_marginBottom="50sp"
             android:background="@color/white"
+            android:contentDescription="@string/stop_button"
             android:onClick="@{() -> fragment.onClickStop()}"
             android:scaleX="2.7"
             android:scaleY="2.7"
-            android:src="@drawable/btn_stop"
-            android:contentDescription="@string/stop_button" />
+            android:src="@drawable/btn_stop" />
 
     </GridLayout>
 </layout>

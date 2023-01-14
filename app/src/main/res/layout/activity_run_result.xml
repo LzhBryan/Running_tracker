@@ -31,14 +31,142 @@
 
     </androidx.appcompat.widget.Toolbar>
 
-    <FrameLayout
+    <GridLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_marginTop="40sp"
+        android:layout_weight="1"
+        android:columnCount="3"
+        android:rowCount="4">
+
+        <TextView
+            android:id="@+id/durationText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnWeight="1"
+            android:layout_gravity="center"
+            android:text="@string/duration"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/distanceResultText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnWeight="1"
+            android:layout_gravity="center"
+            android:text="@string/total_distance"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/paceResultText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnWeight="1"
+            android:layout_gravity="center"
+            android:text="@string/average_pace"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/timeResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnWeight="1"
+            android:layout_gravity="center"
+            android:layout_marginTop="10sp"
+            android:layout_marginBottom="20sp"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/distanceResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnWeight="1"
+            android:layout_gravity="center"
+            android:layout_marginTop="10sp"
+            android:layout_marginBottom="20sp"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/paceResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnWeight="1"
+            android:layout_gravity="center"
+            android:layout_marginTop="10sp"
+            android:layout_marginBottom="20sp"
+            android:textSize="20sp" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnSpan="3" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="3"
+            android:layout_marginStart="20sp"
+            android:layout_marginTop="20sp"
+            android:text="@string/additional_notes"
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="3">
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="10sp"
+                android:layout_weight="2"
+                android:autofillHints="The weather was great!"
+                android:hint="@string/how_did_it_go"
+                android:inputType="textMultiLine" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/tagRun"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="14dp"
+                android:backgroundTint="@color/purple_200"
+                android:contentDescription="@string/tag_button"
+                android:onClick="onClickTagRun"
+                android:src="@drawable/btn_note"
+                app:fabCustomSize="50sp" />
+
+        </LinearLayout>
+
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="0"
+            android:layout_columnSpan="3" />
+
+        <LinearLayout
+            android:id="@+id/standard_bottom_sheet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_rowWeight="5"
+            android:layout_columnSpan="3"
+            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+            android:orientation="horizontal" />
+    </GridLayout>
 
     <Button
+        android:id="@+id/saveRun"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="onClickSaveRun"
         android:padding="0sp"
         android:scaleX="1.4"
         android:scaleY="1.4"

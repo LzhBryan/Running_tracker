@@ -21,9 +21,6 @@ public class StartFragmentViewModel extends ViewModel {
     private MutableLiveData<Float> trackingPace;
     private MutableLiveData<Float> totalDistance;
 
-    public StartFragmentViewModel() {
-    }
-
     public boolean getIsServiceRunning() {
         return isServiceRunning;
     }

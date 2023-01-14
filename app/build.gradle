@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.example.runningtracker'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.runningtracker"
         minSdk 26
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -44,5 +44,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.5.1"
     implementation "androidx.lifecycle:lifecycle-livedata:2.5.1"
     implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1"
-
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
+    implementation "com.github.skydoves:colorpickerpreference:2.0.6"
 }
