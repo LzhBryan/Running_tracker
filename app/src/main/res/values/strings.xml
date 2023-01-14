@@ -8,4 +8,5 @@
     <string name="play_or_pause_button">Play or pause button</string>
     <string name="stop_button">stop button</string>
     <string name="discard_button">discard button</string>
+    <string name="save_activity">Save activity</string>
 </resources>

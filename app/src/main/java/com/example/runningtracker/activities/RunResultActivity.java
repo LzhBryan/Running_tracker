@@ -6,17 +6,14 @@ import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.runningtracker.R;
 import com.example.runningtracker.fragments.StartFragment;
 import com.example.runningtracker.services.TrackingService;
-import com.example.runningtracker.viewmodels.StartFragmentViewModel;
 
 public class RunResultActivity extends AppCompatActivity {
 
     public static final String SERVICE_STATUS = "SERVICE_STATUS";
-    private StartFragmentViewModel startFragmentViewModel;
     public static final String STOP_SERVICE = "STOP_SERVICE";
 
     @Override
@@ -30,9 +27,6 @@ public class RunResultActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
-
-        startFragmentViewModel =
-                new ViewModelProvider(this).get(StartFragmentViewModel.class);
 
         float totalDistance =
                 getIntent().getFloatExtra(StartFragment.TOTAL_DISTANCE, 0);
