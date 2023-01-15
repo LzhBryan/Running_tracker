@@ -52,6 +52,7 @@ public class StartFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        // update UI buttons based on service status
         if (startFragmentViewModel.getIsServiceRunning()) {
             if (startFragmentViewModel.isServiceOnPause()) {
                 switchToPlayBtn();
@@ -62,6 +63,7 @@ public class StartFragment extends Fragment {
             switchToPlayBtn();
         }
 
+        // attach observer listeners to live data
         final Observer<Integer> trackingCounterObserver = lambda -> {
             int trackSeconds = startFragmentViewModel.getTrackingCounter().getValue();
             int trackHour = trackSeconds / 3600;
@@ -86,10 +88,9 @@ public class StartFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        FragmentStartBinding startBinding = FragmentStartBinding.inflate(inflater,
-                container, false);
-        startFragmentViewModel =
-                new ViewModelProvider(requireActivity()).get(StartFragmentViewModel.class);
+        // data binding
+        FragmentStartBinding startBinding = FragmentStartBinding.inflate(inflater, container, false);
+        startFragmentViewModel = new ViewModelProvider(requireActivity()).get(StartFragmentViewModel.class);
         startBinding.setFragment(this);
         View rootView = startBinding.getRoot();
 
@@ -105,11 +106,15 @@ public class StartFragment extends Fragment {
     }
 
     public void onClickRun() {
+        // either start service or pause service thread
         if (!startFragmentViewModel.getIsServiceRunning()) {
+            // check location permission everytime before starting service
             checkLocationPermission();
             if (startFragmentViewModel.isLocationPermissionGranted()) {
+                // attempt to create location request and check if GPS is on
                 createLocationRequest();
                 if (startFragmentViewModel.isGpsOn()) {
+                    // only start foreground service if GPS is on
                     requireActivity().startForegroundService(new Intent(requireActivity()
                             , TrackingService.class));
                     startFragmentViewModel.setServiceRunning(true);
@@ -118,6 +123,7 @@ public class StartFragment extends Fragment {
                 }
             }
         } else {
+            // pause service thread and update UI
             if (!startFragmentViewModel.isServiceOnPause()) {
                 startFragmentViewModel.getMyService().pause();
                 switchToPlayBtn();
@@ -131,11 +137,13 @@ public class StartFragment extends Fragment {
     }
 
     public void onClickStop() {
+        // pause service thread and launch another activity with recorded data
         startFragmentViewModel.getMyService().pause();
         switchToPlayBtn();
         startFragmentViewModel.setServiceOnPause(true);
         requireActivity().unbindService(startFragmentViewModel.getServiceConnection());
         startFragmentViewModel.setMyService(null);
+        // send recorded data to new activity
         Intent runResultIntent = new Intent(requireActivity(), RunResultActivity.class);
         runResultIntent.putExtra(TOTAL_DISTANCE, startFragmentViewModel.getTotalDistance().getValue());
         runResultIntent.putExtra(AVERAGE_PACE, startFragmentViewModel.getTrackingPace().getValue());
@@ -143,6 +151,7 @@ public class StartFragment extends Fragment {
         startActivityForResult(runResultIntent, REQUEST_STOP_SERVICE);
     }
 
+    // helper functions to update UI buttons
     private void switchToPlayBtn() {
         serviceBtn.setImageResource(R.drawable.btn_play);
         if (!startFragmentViewModel.getIsServiceRunning()) {
@@ -159,6 +168,8 @@ public class StartFragment extends Fragment {
         stopBtn.setClickable(true);
     }
 
+    // check if access_fine_location permission is granted, otherwise prompt
+    // user to allow permission
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(requireActivity(),
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -167,7 +178,7 @@ public class StartFragment extends Fragment {
             new MaterialAlertDialogBuilder(requireActivity(), R.style.RoundShapeTheme)
                     .setTitle("Location Permission Needed")
                     .setMessage("This app needs the Location permission, " +
-                            "please accept to use location functionality")
+                            "please accept to use tracking functionality")
                     .setPositiveButton("OK", (dialogInterface, i) ->
                             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION))
                     .create()
@@ -177,6 +188,7 @@ public class StartFragment extends Fragment {
         }
     }
 
+    // display a prompt to tell user can't provide functionality
     private ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
@@ -185,7 +197,7 @@ public class StartFragment extends Fragment {
                     new MaterialAlertDialogBuilder(requireActivity(),
                             R.style.RoundShapeTheme)
                             .setTitle("Location permission needed")
-                            .setMessage("Can't track your running without " + "location access")
+                            .setMessage("Can't track your running without location access")
                             .setPositiveButton("OK", (dialogInterface, i) -> dialogInterface.cancel())
                             .create()
                             .show();
@@ -193,6 +205,7 @@ public class StartFragment extends Fragment {
                 }
             });
 
+    // create location request and check if GPS is on
     protected void createLocationRequest() {
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setInterval(100);
@@ -202,6 +215,7 @@ public class StartFragment extends Fragment {
                 .addLocationRequest(locationRequest);
         SettingsClient client = LocationServices.getSettingsClient(requireActivity());
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        // start foreground service if GPS is already on
         task.addOnSuccessListener(requireActivity(),
                 locationSettingsResponse -> {
                     if (!startFragmentViewModel.isGpsOn()) {
@@ -213,6 +227,7 @@ public class StartFragment extends Fragment {
                         startFragmentViewModel.setGpsOn(true);
                     }
                 });
+        // prompt the user to turn on GPS
         task.addOnFailureListener(requireActivity(), e -> {
             if (e instanceof ResolvableApiException) {
                 try {
@@ -225,11 +240,13 @@ public class StartFragment extends Fragment {
         });
     }
 
+    // receive results from permission prompt and act accordingly
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             if (resultCode == Activity.RESULT_OK) {
+                // start foreground service if user turn on GPS
                 startFragmentViewModel.setGpsOn(true);
                 requireActivity().startForegroundService(new Intent(requireActivity(),
                         TrackingService.class));
@@ -239,6 +256,9 @@ public class StartFragment extends Fragment {
             }
         } else if (requestCode == REQUEST_STOP_SERVICE) {
             if (resultCode == Activity.RESULT_OK) {
+                // receive message from other activity be informed that
+                // service has been terminated
+                // update UI if serivce is not running
                 boolean isServiceRunning = data.getBooleanExtra(RunResultActivity.SERVICE_STATUS, true);
                 if (!isServiceRunning) {
                     startFragmentViewModel.setServiceOnPause(false);
@@ -253,12 +273,14 @@ public class StartFragment extends Fragment {
 
     @Override
     public void onResume() {
+        // update UI based on service status
         if (!startFragmentViewModel.getIsServiceRunning()) {
             switchToPlayBtn();
             startFragmentViewModel.setTrackingPace(0);
             startFragmentViewModel.setTotalDistance(0);
             startFragmentViewModel.setTrackingCounter(0);
         }
+        // bind service upon displaying fragment to user
         if (startFragmentViewModel.getMyService() == null) {
             requireActivity().bindService(new Intent(requireActivity(), TrackingService.class),
                     startFragmentViewModel.getServiceConnection(), Context.BIND_AUTO_CREATE);
@@ -268,6 +290,7 @@ public class StartFragment extends Fragment {
 
     @Override
     public void onStop() {
+        // unbind service when fragment is not being displayed
         if (startFragmentViewModel.getMyService() != null) {
             requireActivity().unbindService(startFragmentViewModel.getServiceConnection());
             startFragmentViewModel.setMyService(null);

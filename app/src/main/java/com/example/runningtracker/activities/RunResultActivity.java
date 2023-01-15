@@ -27,10 +27,9 @@ public class RunResultActivity extends AppCompatActivity {
     public static final String SERVICE_STATUS = "SERVICE_STATUS";
     public static final String STOP_SERVICE = "STOP_SERVICE";
     public static final ArrayList<String> tags = new ArrayList<>(Arrays.asList(
-            "sport", "workout", "motivation"
-            , "marathon", "instarun", "fitness", "gym", "nike", "good " +
-                    "weather", "bad weather", "muscle ache", "sore legs",
-            "health", "healthy lifestyle"));
+            "sport", "workout", "motivation", "marathon", "instarun", "fitness",
+            "gym", "nike", "good weather", "bad weather", "muscle ache",
+            "sore legs", "health", "healthy lifestyle"));
     private RunResultActivityViewModel runResultActivityViewModel;
     private RunViewModel runViewModel;
     private EditText additionalNotesInput;
@@ -43,6 +42,7 @@ public class RunResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_run_result);
 
+        // add back button in toolbar
         Toolbar myToolbar = findViewById(R.id.runResultToolbar);
         setSupportActionBar(myToolbar);
         if (getSupportActionBar() != null) {
@@ -51,8 +51,8 @@ public class RunResultActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        runResultActivityViewModel =
-                new ViewModelProvider(this).get(RunResultActivityViewModel.class);
+        // initialize view models
+        runResultActivityViewModel = new ViewModelProvider(this).get(RunResultActivityViewModel.class);
         runViewModel = new ViewModelProvider(this).get(RunViewModel.class);
 
         additionalNotesInput = findViewById(R.id.additionalNotesInput);
@@ -60,62 +60,67 @@ public class RunResultActivity extends AppCompatActivity {
         TextView distanceText = findViewById(R.id.distanceResult);
         TextView paceText = findViewById(R.id.paceResult);
 
-        totalDistance =
-                getIntent().getFloatExtra(StartFragment.TOTAL_DISTANCE, 0);
-        averagePace =
-                getIntent().getFloatExtra(StartFragment.AVERAGE_PACE, 0);
+        // get and display data that might be stored into database
+        totalDistance = getIntent().getFloatExtra(StartFragment.TOTAL_DISTANCE, 0);
+        averagePace = getIntent().getFloatExtra(StartFragment.AVERAGE_PACE, 0);
         totalTime = getIntent().getIntExtra(StartFragment.TOTAL_TIME, 0);
 
         int totalHour = totalTime / 3600;
         int totalMinute = (totalTime - (3600 * totalHour)) / 60;
-        int totalSeconds =
-                (totalTime - (3600 * totalHour) - (totalMinute * 60));
+        int totalSeconds = (totalTime - (3600 * totalHour) - (totalMinute * 60));
 
-        timeText.setText(String.format("%02d:%02d:%02d",
-                totalHour, totalMinute, totalSeconds));
+        timeText.setText(String.format("%02d:%02d:%02d", totalHour, totalMinute, totalSeconds));
         paceText.setText(String.format("%.2f min/km", averagePace));
         distanceText.setText(String.format("%.2f km", totalDistance / 1000));
     }
 
     public void stopService() {
+        // stop service via onStartCommand in service class
         Intent stop = new Intent(this, TrackingService.class);
         stop.putExtra(STOP_SERVICE, 1);
         this.startService(stop);
 
+        // inform start fragment that service has been stopped
         Intent result = new Intent(this, StartFragment.class);
         result.putExtra(SERVICE_STATUS, false);
         setResult(RESULT_OK, result);
         finish();
     }
 
+    // simulate a back button press when click on the back arrow icon on toolbar
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
     }
 
+    // stop service when user does not want to save running record
     public void onClickDiscardRun(View view) {
         stopService();
     }
 
     public void onClickTagRun(View view) {
+        // display multiple tags options to user
         ArrayList<String> selectedItems = new ArrayList<>();
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Tags");
         builder.setMultiChoiceItems(tags.toArray(new CharSequence[tags.size()]),
                 null, (dialog, which, isChecked) -> {
+                    // record checked items
                     if (isChecked) {
                         selectedItems.add(tags.get(which));
                     } else if (selectedItems.contains(tags.get(which))) {
                         selectedItems.remove(tags.get(which));
                     }
                 });
+        // save user options into live data
         builder.setPositiveButton("OK", (dialog, which) -> runResultActivityViewModel.setTags(selectedItems));
         builder.setNegativeButton("Cancel", null);
         AlertDialog tagDialog = builder.create();
         tagDialog.show();
     }
 
+    // save running record into database
     public void onClickSaveRun(View view) {
         stopService();
         String userInput = additionalNotesInput.getText().toString();

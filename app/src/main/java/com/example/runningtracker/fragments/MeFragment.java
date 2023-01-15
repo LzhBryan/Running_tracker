@@ -23,14 +23,18 @@ public class MeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        FragmentMeBinding meBinding = FragmentMeBinding.inflate(inflater,
-                container, false);
+        // data binding
+        FragmentMeBinding meBinding = FragmentMeBinding.inflate(inflater, container, false);
         View rootView = meBinding.getRoot();
         meBinding.setVariable(BR.meFragment, this);
+
+        // initialize recycler view
         RunViewModel runViewModel = new ViewModelProvider(requireActivity()).get(RunViewModel.class);
         RecyclerView recyclerView = rootView.findViewById(R.id.runList);
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
         runViewModel.getAllRuns().observe(requireActivity(), runs -> runAdapter.setAllRunningRecords(runs));
+        // only instantiate new adapter class, otherwise recyclerview wont
+        // show data
         if (runAdapter == null) {
             runAdapter = new RunAdapter(requireActivity(), runViewModel);
         }

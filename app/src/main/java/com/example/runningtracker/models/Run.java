@@ -70,6 +70,7 @@ public class Run {
         return tags;
     }
 
+    // convert array list to string and vice versa
     public static class TagsTypeConverter {
         @TypeConverter
         public ArrayList<String> fromString(String tags) {

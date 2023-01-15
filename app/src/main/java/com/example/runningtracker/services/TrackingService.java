@@ -61,22 +61,27 @@ public class TrackingService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // check if intent is being sent to stop service, otherwise start
+        // service
         int stop = intent.getIntExtra(RunResultActivity.STOP_SERVICE, 0);
         if (stop == 1) {
             running = false;
+            // call this method to update service status so that UI can update
             doCallbacks();
+            // kill service thread
             trackingThread.interrupt();
             trackingThread = null;
             fusedLocationClient.removeLocationUpdates(locationCallback);
             stopForeground(true);
             stopSelf();
         } else {
+            // start tracking and new thread
             trackLocation();
             trackingThread = new TrackingThread();
             running = true;
             trackingThread.start();
             Notification foregroundNotification =
-                    buildForegroundNotification("0");
+                    buildForegroundNotification("Time elapsed: 00:00:00");
             startForeground(ONGOING_NOTIFICATION_ID, foregroundNotification);
         }
         return START_NOT_STICKY;
@@ -139,6 +144,7 @@ public class TrackingService extends Service {
 
         @Override
         public void run() {
+            // thread running and pausing
             while (running) {
                 synchronized (pauseLock) {
                     if (!running) {
@@ -161,6 +167,8 @@ public class TrackingService extends Service {
                 updateNotification();
                 trackingSeconds += 1;
                 trackingPace = ((float) trackingSeconds / 60) / (distance / 1000);
+                // prevent infinity to be displayed when it was first divided
+                // by 0
                 if (trackingPace == Float.POSITIVE_INFINITY) {
                     trackingPace = 0;
                 }
@@ -195,12 +203,14 @@ public class TrackingService extends Service {
     }
 
     private Notification buildForegroundNotification(String elapsedTime) {
+        // notification intent to go back activity
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.putExtra(NOTIFICATION_ENTRY, "startFragment");
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, notificationIntent,
                         PendingIntent.FLAG_IMMUTABLE);
 
+        // notification intent to stop service
         Intent stopnotificationIntent = new Intent(this, TrackingService.class);
         stopnotificationIntent.putExtra(RunResultActivity.STOP_SERVICE, 1);
         PendingIntent Intent = PendingIntent.getService(this, 0,
@@ -217,6 +227,7 @@ public class TrackingService extends Service {
                 .build();
     }
 
+    // display up to date running elapsed time in foregound notification
     private void updateNotification() {
         int trackHour = trackingSeconds / 3600;
         int trackMinute = (trackingSeconds - (3600 * trackHour)) / 60;
@@ -229,6 +240,7 @@ public class TrackingService extends Service {
         notificationManager.notify(ONGOING_NOTIFICATION_ID, notification);
     }
 
+    // location tracking implementation
     public void trackLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest locationRequest = new
@@ -250,10 +262,8 @@ public class TrackingService extends Service {
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
                     if (location != null) {
-                        float distanceTravelled =
-                                location.distanceTo(previousLocation);
-                        Log.d("comp3018",
-                                "distance travelled " + distanceTravelled);
+                        float distanceTravelled = location.distanceTo(previousLocation);
+                        Log.d("comp3018", "distance travelled " + distanceTravelled);
                         distance += distanceTravelled;
                         System.out.println("Total distance" + distance);
                         previousLocation = location;

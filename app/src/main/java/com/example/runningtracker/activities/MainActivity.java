@@ -25,16 +25,19 @@ public class MainActivity extends AppCompatActivity {
         String notificationEntry =
                 getIntent().getStringExtra(TrackingService.NOTIFICATION_ENTRY);
 
+        // allow return to tracker screen when click on notification
         if (notificationEntry != null) {
             if (notificationEntry.equals("startFragment")) {
                 switchFragment(new StartFragment());
                 bottomNavigationView.setSelectedItemId(R.id.start);
             }
         } else {
+            // show tracking screen as default
             switchFragment(new StartFragment());
             bottomNavigationView.setSelectedItemId(R.id.start);
         }
 
+        // configure bottom navigation bar to show different fragments on click
         bottomNavigationView.setOnItemSelectedListener(item -> {
             switch (item.getItemId()) {
                 case R.id.start:
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        // if remaining item on back stack is 1, close app
         if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
             finish();
         } else {
@@ -58,15 +62,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchFragment(Fragment fragment) {
-        String meFragmentClassName = "com.example.runningtracker" +
-                ".fragments.MeFragment";
+        // find the me fragment instance
+        String meFragmentClassName = "com.example.runningtracker.fragments.MeFragment";
         FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment meFragment =
-                fragmentManager.findFragmentByTag(meFragmentClassName);
+        Fragment meFragment = fragmentManager.findFragmentByTag(meFragmentClassName);
 
+        // if found, reuse that particular instance so that recycler view can
+        // load properly
         if (meFragment != null && fragment.getClass().getName().equals(meFragmentClassName)) {
             fragmentManager.beginTransaction().replace(R.id.fragment_container, meFragment, meFragmentClassName).commit();
         } else {
+            // allow add to back stack option to store the fragment instance
             fragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, fragment, fragment.getClass().getName())
                     .setReorderingAllowed(true)
@@ -78,8 +84,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Fragment fragment =
-                getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        // receive the data and pass back to the fragment that request it
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (fragment != null) {
             fragment.onActivityResult(requestCode, resultCode, data);
         }

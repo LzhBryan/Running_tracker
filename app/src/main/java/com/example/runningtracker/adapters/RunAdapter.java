@@ -32,8 +32,7 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
         this.runViewModel = runViewModel;
         this.allRunningRecords = new ArrayList<>();
         this.context = context;
-        layoutInflater =
-                (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     public void setAllRunningRecords(List<Run> allRunningRecords) {
@@ -49,8 +48,7 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
     @NonNull
     @Override
     public RunViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = layoutInflater.inflate(R.layout.run_item, parent,
-                false);
+        View itemView = layoutInflater.inflate(R.layout.run_item, parent, false);
         return new RunViewHolder(itemView);
     }
 
@@ -89,9 +87,9 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
                 int totalTime = runRecord.getRunDuration();
                 int totalHour = totalTime / 3600;
                 int totalMinute = (totalTime - (3600 * totalHour)) / 60;
-                int totalSeconds =
-                        (totalTime - (3600 * totalHour) - (totalMinute * 60));
+                int totalSeconds = (totalTime - (3600 * totalHour) - (totalMinute * 60));
 
+                // display run record data
                 duration.setText(String.format("Duration: %02d:%02d:%02d",
                         totalHour, totalMinute, totalSeconds));
                 totalDistance.setText(String.format("Total distance: %.2f km",
@@ -101,24 +99,30 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
                 additionalNotes.setText(String.format("Notes: %s",
                         runRecord.getAdditionalNote()));
 
+                // handle exception case where user did not enter any notes
                 if (runRecord.getTags() != null) {
                     tags.setText(String.format("Tags: %s", runRecord.getTags().toString()));
                 } else {
                     tags.setText("Tags: ");
                 }
+
+                // create dialog for both notes and tags to update a single
+                // record
                 updateRecordBtn.setOnClickListener(v -> {
                     ArrayList<String> selectedTags = new ArrayList<>();
                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
                     builder.setTitle("Modify notes");
+
                     final EditText notesInput = new EditText(context);
                     notesInput.setInputType(InputType.TYPE_CLASS_TEXT);
                     notesInput.setText(runRecord.getAdditionalNote());
                     builder.setView(notesInput);
+
                     builder.setPositiveButton("Next", (dialog, which) -> {
+                        // capture user input if there's any and prompt for tags
                         String notes = notesInput.getText().toString();
 
-                        AlertDialog.Builder innerBuilder =
-                                new AlertDialog.Builder(context);
+                        AlertDialog.Builder innerBuilder = new AlertDialog.Builder(context);
                         innerBuilder.setTitle("Modify tags");
                         innerBuilder.setMultiChoiceItems(RunResultActivity.tags.toArray(new CharSequence[RunResultActivity.tags.size()]),
                                 null, (innerDialog, innerWhich, isChecked) -> {
@@ -128,16 +132,15 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
                                         selectedTags.remove(RunResultActivity.tags.get(innerWhich));
                                     }
                                 });
-                        innerBuilder.setPositiveButton("Update",
-                                (innerDialog, innerWhich) -> runViewModel.update(runRecord.getRunId(), notes
-                                        , selectedTags));
+
+                        innerBuilder.setPositiveButton("Update", (innerDialog, innerWhich) ->
+                                // update the record
+                                runViewModel.update(runRecord.getRunId(), notes, selectedTags));
                         innerBuilder.setNegativeButton("Cancel", (dialog1, which1) -> {
                             // only update notes if user make changes to notes
                             if (!notes.equals("") && !notes.equals(runRecord.getAdditionalNote())) {
-                                runViewModel.update(runRecord.getRunId(), notes
-                                        , runRecord.getTags());
-                                Toast.makeText(context, "Successfully updated" +
-                                                " this run record",
+                                runViewModel.update(runRecord.getRunId(), notes, runRecord.getTags());
+                                Toast.makeText(context, "Successfully updated this run record",
                                         Toast.LENGTH_SHORT).show();
                             }
                         });
@@ -148,7 +151,7 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
                     AlertDialog notesDialog = builder.create();
                     notesDialog.show();
                 });
-
+                // delete record
                 deleteRecordBtn.setOnClickListener(v -> {
                     runViewModel.delete(runRecord);
                     Toast.makeText(context, "Successfully deleted this run record",

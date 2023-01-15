@@ -11,6 +11,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.example.runningtracker.models.Run;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -31,7 +33,7 @@ public abstract class RunDatabase extends RoomDatabase {
             synchronized (RunDatabase.class) {
                 if (instance == null) {
                     instance = Room.databaseBuilder(context.getApplicationContext(),
-                                    RunDatabase.class, "cat_database")
+                                    RunDatabase.class, "run_database")
                             .fallbackToDestructiveMigration()
                             .addCallback(createCallback)
                             .build();
@@ -41,11 +43,21 @@ public abstract class RunDatabase extends RoomDatabase {
         return instance;
     }
 
-    private static RoomDatabase.Callback createCallback = new RoomDatabase.Callback() {
+    private static final RoomDatabase.Callback createCallback = new RoomDatabase.Callback() {
         @Override
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
+            // populate the database when first created
             databaseWriteExecutor.execute(() -> {
+                RunDao runDao = instance.runDao();
+                runDao.insert(new Run(700, 2, (float) 5.83,
+                        "Addicted to running dopamine",
+                        new ArrayList<>(Arrays.asList("good weather",
+                                "healthy lifestyle"))));
+                runDao.insert(new Run(1000, 3, (float) 5.55,
+                        "Fresh air outside",
+                        new ArrayList<>(Arrays.asList("good weather",
+                                "workout"))));
             });
         }
     };

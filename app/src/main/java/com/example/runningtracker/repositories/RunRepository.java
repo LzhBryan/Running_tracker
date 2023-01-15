@@ -21,14 +21,17 @@ public class RunRepository {
         allRuns = runDao.getAllOrdered();
     }
 
+    // insert a single record
     public void insert(Run run) {
         RunDatabase.databaseWriteExecutor.execute(() -> runDao.insert(run));
     }
 
+    // update the notes and tags for a single record based on ID
     public void update(int id, String additionalNote, ArrayList<String> newTags) {
         RunDatabase.databaseWriteExecutor.execute(() -> runDao.update(id, additionalNote, newTags));
     }
 
+    // delete a particular record
     public void delete(Run run) {
         RunDatabase.databaseWriteExecutor.execute(() -> runDao.delete(run));
     }
