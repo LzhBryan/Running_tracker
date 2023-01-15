@@ -208,8 +208,8 @@ public class StartFragment extends Fragment {
     // create location request and check if GPS is on
     protected void createLocationRequest() {
         LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(100);
-        locationRequest.setFastestInterval(500);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(2000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(locationRequest);

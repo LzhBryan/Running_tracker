@@ -28,7 +28,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 
 public class TrackingService extends Service {
 
@@ -166,6 +165,7 @@ public class TrackingService extends Service {
                 doCallbacks();
                 updateNotification();
                 trackingSeconds += 1;
+                System.out.println(trackingSeconds);
                 trackingPace = ((float) trackingSeconds / 60) / (distance / 1000);
                 // prevent infinity to be displayed when it was first divided
                 // by 0
@@ -231,8 +231,8 @@ public class TrackingService extends Service {
     private void updateNotification() {
         int trackHour = trackingSeconds / 3600;
         int trackMinute = (trackingSeconds - (3600 * trackHour)) / 60;
-        trackingSeconds = (trackingSeconds - (3600 * trackHour) - (trackMinute * 60));
-        String elapsedTime = String.format("%02d:%02d:%02d", trackHour, trackMinute, trackingSeconds);
+        int trackSeconds = (trackingSeconds - (3600 * trackHour) - (trackMinute * 60));
+        String elapsedTime = String.format("%02d:%02d:%02d", trackHour, trackMinute, trackSeconds);
 
         Notification notification = buildForegroundNotification(elapsedTime);
         NotificationManager notificationManager =
@@ -243,29 +243,23 @@ public class TrackingService extends Service {
     // location tracking implementation
     public void trackLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        LocationRequest locationRequest = new
-                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100).build();
 
-        try {
-            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,
-                    null).addOnSuccessListener(location -> {
-                if (location != null) {
-                    previousLocation = location;
-                }
-            });
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(2000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
                     if (location != null) {
-                        float distanceTravelled = location.distanceTo(previousLocation);
-                        Log.d("comp3018", "distance travelled " + distanceTravelled);
-                        distance += distanceTravelled;
-                        System.out.println("Total distance" + distance);
+                        if (previousLocation != null) {
+                            float distanceTravelled = location.distanceTo(previousLocation);
+                            Log.d("comp3018", "distance travelled " + distanceTravelled);
+                            distance += distanceTravelled;
+                            System.out.println("Total distance" + distance);
+                        }
                         previousLocation = location;
                     }
                 }
