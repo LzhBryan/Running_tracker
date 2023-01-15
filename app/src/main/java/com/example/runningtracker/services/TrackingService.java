@@ -13,7 +13,6 @@ import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Looper;
 import android.os.RemoteCallbackList;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -165,7 +164,6 @@ public class TrackingService extends Service {
                 doCallbacks();
                 updateNotification();
                 trackingSeconds += 1;
-                System.out.println(trackingSeconds);
                 trackingPace = ((float) trackingSeconds / 60) / (distance / 1000);
                 // prevent infinity to be displayed when it was first divided
                 // by 0
@@ -256,9 +254,7 @@ public class TrackingService extends Service {
                     if (location != null) {
                         if (previousLocation != null) {
                             float distanceTravelled = location.distanceTo(previousLocation);
-                            Log.d("comp3018", "distance travelled " + distanceTravelled);
                             distance += distanceTravelled;
-                            System.out.println("Total distance" + distance);
                         }
                         previousLocation = location;
                     }
