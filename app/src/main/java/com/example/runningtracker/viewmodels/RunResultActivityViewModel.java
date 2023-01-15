@@ -7,20 +7,17 @@ import java.util.ArrayList;
 
 public class RunResultActivityViewModel extends ViewModel {
 
-    private MutableLiveData<ArrayList<String>> tags;
+    private MutableLiveData<ArrayList<String>> selectedTags;
 
     public MutableLiveData<ArrayList<String>> getTags() {
-        if (tags == null) {
-            tags = new MutableLiveData<>();
-            ArrayList<String> startingTags = new ArrayList<>();
-            startingTags.add("Great Weather");
-            startingTags.add("Fresh air");
-            startingTags.add("Muscle ache");
-            tags.postValue(startingTags);
+        if (selectedTags == null) {
+            selectedTags = new MutableLiveData<>();
+            selectedTags.postValue(new ArrayList<>());
         }
-        return tags;
+        return selectedTags;
     }
 
-    public void setTags(String tags) {
+    public void setTags(ArrayList<String> selectedTags) {
+        getTags().postValue(selectedTags);
     }
 }

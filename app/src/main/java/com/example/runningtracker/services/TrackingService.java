@@ -22,7 +22,6 @@ import androidx.core.app.NotificationCompat;
 import com.example.runningtracker.R;
 import com.example.runningtracker.activities.MainActivity;
 import com.example.runningtracker.activities.RunResultActivity;
-import com.example.runningtracker.fragments.StartFragment;
 import com.example.runningtracker.interfaces.ICallback;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -69,15 +68,14 @@ public class TrackingService extends Service {
             fusedLocationClient.removeLocationUpdates(locationCallback);
             stopForeground(true);
             stopSelf();
-
         } else {
+            trackLocation();
             trackingThread = new TrackingThread();
             running = true;
             trackingThread.start();
             Notification foregroundNotification =
                     buildForegroundNotification("0");
             startForeground(ONGOING_NOTIFICATION_ID, foregroundNotification);
-            trackLocation();
         }
         return START_NOT_STICKY;
     }

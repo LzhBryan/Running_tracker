@@ -4,37 +4,46 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.runningtracker.R;
 import com.example.runningtracker.fragments.StartFragment;
+import com.example.runningtracker.models.Run;
 import com.example.runningtracker.services.TrackingService;
-import com.skydoves.colorpickerview.ColorPickerDialog;
-import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
+import com.example.runningtracker.viewmodels.RunResultActivityViewModel;
+import com.example.runningtracker.viewmodels.RunViewModel;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import kotlin.Unit;
+import java.util.Arrays;
 
 public class RunResultActivity extends AppCompatActivity {
 
     public static final String SERVICE_STATUS = "SERVICE_STATUS";
     public static final String STOP_SERVICE = "STOP_SERVICE";
-    private int customTagColor;
-    private String customTagName;
-    private List<String> tags = new ArrayList<>();
+    private RunResultActivityViewModel runResultActivityViewModel;
+    public static final ArrayList<String> tags = new ArrayList<>(Arrays.asList(
+            "sport", "workout", "motivation"
+            , "marathon", "instarun", "fitness", "gym", "nike", "good " +
+                    "weather", "bad weather", "muscle ache", "sore legs",
+            "health", "healthy lifestyle"));
+    private EditText additionalNotesInput;
+    private RunViewModel runViewModel;
+    private float totalDistance;
+    private float averagePace;
+    private int totalTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_run_result);
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.runResultToolbar);
+
+        Toolbar myToolbar = findViewById(R.id.runResultToolbar);
         setSupportActionBar(myToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -42,15 +51,20 @@ public class RunResultActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        float totalDistance =
-                getIntent().getFloatExtra(StartFragment.TOTAL_DISTANCE, 0);
-        float averagePace =
-                getIntent().getFloatExtra(StartFragment.AVERAGE_PACE, 0);
-        int totalTime = getIntent().getIntExtra(StartFragment.TOTAL_TIME, 0);
+        runResultActivityViewModel =
+                new ViewModelProvider(this).get(RunResultActivityViewModel.class);
+        runViewModel = new ViewModelProvider(this).get(RunViewModel.class);
 
+        additionalNotesInput = findViewById(R.id.additionalNotesInput);
         TextView timeText = findViewById(R.id.timeResult);
         TextView distanceText = findViewById(R.id.distanceResult);
         TextView paceText = findViewById(R.id.paceResult);
+
+        totalDistance =
+                getIntent().getFloatExtra(StartFragment.TOTAL_DISTANCE, 0);
+        averagePace =
+                getIntent().getFloatExtra(StartFragment.AVERAGE_PACE, 0);
+        totalTime = getIntent().getIntExtra(StartFragment.TOTAL_TIME, 0);
 
         int totalHour = totalTime / 3600;
         int totalMinute = (totalTime - (3600 * totalHour)) / 60;
@@ -86,38 +100,18 @@ public class RunResultActivity extends AppCompatActivity {
     }
 
     public void onClickTagRun(View view) {
-
-        ArrayList<String> selectedItems = new ArrayList();
-
+        ArrayList<String> selectedItems = new ArrayList<>();
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Tags");
-        tags.add("Great weather");
-        tags.add("Fresh Air");
         builder.setMultiChoiceItems(tags.toArray(new CharSequence[tags.size()]),
-                null,
-                (dialog, which, isChecked) -> {
-        });
-        builder.setNeutralButton("Add tags",
-                (dialogInterface, i) -> {
-                    AlertDialog.Builder builderInner =
-                            new AlertDialog.Builder(RunResultActivity.this);
-                    final EditText input = new EditText(RunResultActivity.this);
-                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT);
-                    input.setLayoutParams(lp);
-                    builderInner.setView(input);
-                    builderInner.setPositiveButton("Add",
-                            (dialog, which) -> {
-                                tags.add(input.getText().toString());
-                            });
-                    builderInner.setNegativeButton("Cancel", (dialog, i1) -> dialog.dismiss());
-                    builderInner.show();
+                null, (dialog, which, isChecked) -> {
+                    if (isChecked) {
+                        selectedItems.add(tags.get(which));
+                    } else if (selectedItems.contains(tags.get(which))) {
+                        selectedItems.remove(tags.get(which));
+                    }
                 });
-
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            // user clicked OK
-        });
+        builder.setPositiveButton("OK", (dialog, which) -> runResultActivityViewModel.setTags(selectedItems));
         builder.setNegativeButton("Cancel", null);
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -125,6 +119,10 @@ public class RunResultActivity extends AppCompatActivity {
 
     public void onClickSaveRun(View view) {
         stopService();
-        // save into database
+        String userInput = additionalNotesInput.getText().toString();
+        runViewModel.insert(new Run(totalTime, totalDistance, averagePace,
+                userInput, runResultActivityViewModel.getTags().getValue()));
+        Toast.makeText(this, "Successfully recorded this activity",
+                Toast.LENGTH_SHORT).show();
     }
 }

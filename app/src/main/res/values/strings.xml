@@ -14,4 +14,7 @@
     <string name="additional_notes">Additional notes</string>
     <string name="how_did_it_go">How did it go?</string>
     <string name="tag_button">Tag button</string>
+    <string name="tags">Tags</string>
+    <string name="delete_record">Delete Record</string>
+    <string name="update_record">Update Record</string>
 </resources>

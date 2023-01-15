@@ -45,5 +45,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata:2.5.1"
     implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
-    implementation "com.github.skydoves:colorpickerpreference:2.0.6"
+    implementation "androidx.room:room-runtime:2.5.0"
+    annotationProcessor "androidx.room:room-compiler:2.5.0"
+    implementation 'com.google.code.gson:gson:2.10.1'
 }

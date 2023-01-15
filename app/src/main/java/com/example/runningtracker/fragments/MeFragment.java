@@ -1,25 +1,44 @@
 package com.example.runningtracker.fragments;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.databinding.library.baseAdapters.BR;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.runningtracker.R;
+import com.example.runningtracker.adapters.RunAdapter;
+import com.example.runningtracker.databinding.FragmentMeBinding;
+import com.example.runningtracker.viewmodels.RunViewModel;
 
 public class MeFragment extends Fragment {
+    private RunAdapter runAdapter;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        FragmentMeBinding meBinding = FragmentMeBinding.inflate(inflater,
+                container, false);
+        View rootView = meBinding.getRoot();
+        meBinding.setVariable(BR.meFragment, this);
+        RecyclerView recyclerView = rootView.findViewById(R.id.runList);
+        RunViewModel runViewModel = new ViewModelProvider(requireActivity()).get(RunViewModel.class);
+        runViewModel.getAllRuns().observe(requireActivity(), runs -> runAdapter.setRuns(runs));
+        runAdapter = new RunAdapter(requireActivity(), runViewModel);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireActivity()));
+        recyclerView.setAdapter(runAdapter);
+        return rootView;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_me, container, false);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
     }
 }
