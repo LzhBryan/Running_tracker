@@ -90,7 +90,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/update_record" />
-<!--                        android:onClick="@{() -> meFragment.onClickUpdateRecord()}"-->
 
                     <Button
                         android:id="@+id/deleteRecord"

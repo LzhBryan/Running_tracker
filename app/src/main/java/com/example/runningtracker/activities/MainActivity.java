@@ -11,22 +11,22 @@ import androidx.fragment.app.FragmentManager;
 import com.example.runningtracker.R;
 import com.example.runningtracker.fragments.MeFragment;
 import com.example.runningtracker.fragments.StartFragment;
+import com.example.runningtracker.services.TrackingService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
-
-    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        String redirect = getIntent().getStringExtra("redirect");
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        String notificationEntry =
+                getIntent().getStringExtra(TrackingService.NOTIFICATION_ENTRY);
 
-        if (redirect != null) {
-            if (redirect.equals("startFragment")) {
+        if (notificationEntry != null) {
+            if (notificationEntry.equals("startFragment")) {
                 switchFragment(new StartFragment());
                 bottomNavigationView.setSelectedItemId(R.id.start);
             }
@@ -46,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
-
     }
 
     @Override
@@ -62,34 +61,17 @@ public class MainActivity extends AppCompatActivity {
         String meFragmentClassName = "com.example.runningtracker" +
                 ".fragments.MeFragment";
         FragmentManager fragmentManager = getSupportFragmentManager();
-
         Fragment meFragment =
                 fragmentManager.findFragmentByTag(meFragmentClassName);
 
         if (meFragment != null && fragment.getClass().getName().equals(meFragmentClassName)) {
-            System.out.println("yay");
             fragmentManager.beginTransaction().replace(R.id.fragment_container, meFragment, meFragmentClassName).commit();
         } else {
-
-//        if (fragment.getClass().getName().equals(meFragmentClassName)) {
-//            if (fragmentManager.findFragmentByTag(meFragmentClassName) != null) {
-//                getSupportFragmentManager().beginTransaction().show(getSupportFragmentManager().findFragmentByTag(meFragmentClassName)).commit();
-//            } else {
-//                getSupportFragmentManager().beginTransaction()
-//                        .replace(R.id.fragment_container, fragment,
-//                                fragment.getClass().getName())
-//                        .setReorderingAllowed(true)
-//                        .addToBackStack(fragment.getClass().getName())
-//                        .commit();
-//            }
-//        } else {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, fragment,
-                            fragment.getClass().getName())
+            fragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, fragment, fragment.getClass().getName())
                     .setReorderingAllowed(true)
                     .addToBackStack(fragment.getClass().getName())
                     .commit();
-//        }
         }
     }
 
@@ -98,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         Fragment fragment =
                 getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-        fragment.onActivityResult(requestCode, resultCode, data);
+        if (fragment != null) {
+            fragment.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }

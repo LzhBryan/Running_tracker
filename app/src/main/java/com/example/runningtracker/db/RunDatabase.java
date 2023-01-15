@@ -14,7 +14,7 @@ import com.example.runningtracker.models.Run;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {Run.class}, version = 2, exportSchema = false)
+@Database(entities = {Run.class}, version = 1, exportSchema = false)
 @TypeConverters({Run.TagsTypeConverter.class})
 public abstract class RunDatabase extends RoomDatabase {
 
@@ -46,7 +46,6 @@ public abstract class RunDatabase extends RoomDatabase {
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
             databaseWriteExecutor.execute(() -> {
-                RunDao runDao = instance.runDao();
             });
         }
     };

@@ -34,14 +34,15 @@ public class TrackingService extends Service {
 
     private static final int ONGOING_NOTIFICATION_ID = 1;
     private static final String CHANNEL_ID = "100";
+    public static final String NOTIFICATION_ENTRY = "NOTIFICATION_ENTRY";
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private NotificationManager notificationManager;
     private Location previousLocation;
-    private volatile boolean running;
-    private volatile boolean pausing;
     private final Object pauseLock = new Object();
     private TrackingThread trackingThread;
+    private volatile boolean running;
+    private volatile boolean pausing;
     private int trackingSeconds = 0;
     private float trackingPace = 0;
     private float distance = 0;
@@ -159,8 +160,7 @@ public class TrackingService extends Service {
                 doCallbacks();
                 updateNotification();
                 trackingSeconds += 1;
-                trackingPace =
-                        ((float) trackingSeconds / 60) / (distance / 1000);
+                trackingPace = ((float) trackingSeconds / 60) / (distance / 1000);
                 if (trackingPace == Float.POSITIVE_INFINITY) {
                     trackingPace = 0;
                 }
@@ -196,14 +196,15 @@ public class TrackingService extends Service {
 
     private Notification buildForegroundNotification(String elapsedTime) {
         Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.putExtra("redirect", "startFragment");
+        notificationIntent.putExtra(NOTIFICATION_ENTRY, "startFragment");
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, notificationIntent,
                         PendingIntent.FLAG_IMMUTABLE);
 
         Intent stopnotificationIntent = new Intent(this, TrackingService.class);
         stopnotificationIntent.putExtra(RunResultActivity.STOP_SERVICE, 1);
-        PendingIntent Intent = PendingIntent.getService(this, 0, stopnotificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent Intent = PendingIntent.getService(this, 0,
+                stopnotificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Running Tracker")
@@ -219,13 +220,10 @@ public class TrackingService extends Service {
     private void updateNotification() {
         int trackHour = trackingSeconds / 3600;
         int trackMinute = (trackingSeconds - (3600 * trackHour)) / 60;
-        trackingSeconds =
-                (trackingSeconds - (3600 * trackHour) - (trackMinute * 60));
-        String elapsedTime = String.format("%02d:%02d:%02d",
-                trackHour, trackMinute, trackingSeconds);
+        trackingSeconds = (trackingSeconds - (3600 * trackHour) - (trackMinute * 60));
+        String elapsedTime = String.format("%02d:%02d:%02d", trackHour, trackMinute, trackingSeconds);
 
         Notification notification = buildForegroundNotification(elapsedTime);
-
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(ONGOING_NOTIFICATION_ID, notification);
@@ -234,8 +232,7 @@ public class TrackingService extends Service {
     public void trackLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest locationRequest = new
-                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,
-                100).build();
+                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100).build();
 
         try {
             fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,
@@ -243,8 +240,6 @@ public class TrackingService extends Service {
                 if (location != null) {
                     previousLocation = location;
                 }
-            }).addOnFailureListener(location -> {
-
             });
         } catch (SecurityException e) {
             e.printStackTrace();
@@ -269,8 +264,7 @@ public class TrackingService extends Service {
 
         try {
             fusedLocationClient.requestLocationUpdates(locationRequest,
-                    locationCallback,
-                    Looper.getMainLooper());
+                    locationCallback, Looper.getMainLooper());
         } catch (SecurityException e) {
             e.printStackTrace();
         }

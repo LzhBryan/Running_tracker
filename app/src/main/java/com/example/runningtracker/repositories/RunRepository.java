@@ -22,21 +22,15 @@ public class RunRepository {
     }
 
     public void insert(Run run) {
-        RunDatabase.databaseWriteExecutor.execute(() -> {
-            runDao.insert(run);
-        });
+        RunDatabase.databaseWriteExecutor.execute(() -> runDao.insert(run));
     }
 
     public void update(int id, String additionalNote, ArrayList<String> newTags) {
-        RunDatabase.databaseWriteExecutor.execute(() -> {
-            runDao.update(id, additionalNote, newTags);
-        });
+        RunDatabase.databaseWriteExecutor.execute(() -> runDao.update(id, additionalNote, newTags));
     }
 
     public void delete(Run run) {
-        RunDatabase.databaseWriteExecutor.execute(() -> {
-            runDao.delete(run);
-        });
+        RunDatabase.databaseWriteExecutor.execute(() -> runDao.delete(run));
     }
 
     public LiveData<List<Run>> getAllRuns() {

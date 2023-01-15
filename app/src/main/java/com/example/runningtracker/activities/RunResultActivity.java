@@ -26,17 +26,17 @@ public class RunResultActivity extends AppCompatActivity {
 
     public static final String SERVICE_STATUS = "SERVICE_STATUS";
     public static final String STOP_SERVICE = "STOP_SERVICE";
-    private RunResultActivityViewModel runResultActivityViewModel;
     public static final ArrayList<String> tags = new ArrayList<>(Arrays.asList(
             "sport", "workout", "motivation"
             , "marathon", "instarun", "fitness", "gym", "nike", "good " +
                     "weather", "bad weather", "muscle ache", "sore legs",
             "health", "healthy lifestyle"));
-    private EditText additionalNotesInput;
+    private RunResultActivityViewModel runResultActivityViewModel;
     private RunViewModel runViewModel;
+    private EditText additionalNotesInput;
+    private int totalTime;
     private float totalDistance;
     private float averagePace;
-    private int totalTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,9 +73,8 @@ public class RunResultActivity extends AppCompatActivity {
 
         timeText.setText(String.format("%02d:%02d:%02d",
                 totalHour, totalMinute, totalSeconds));
-        paceText.setText(String.format("%.2f minute/km", averagePace));
-        distanceText.setText(String.format("%.2f km",
-                totalDistance / 1000));
+        paceText.setText(String.format("%.2f min/km", averagePace));
+        distanceText.setText(String.format("%.2f km", totalDistance / 1000));
     }
 
     public void stopService() {
@@ -113,8 +112,8 @@ public class RunResultActivity extends AppCompatActivity {
                 });
         builder.setPositiveButton("OK", (dialog, which) -> runResultActivityViewModel.setTags(selectedItems));
         builder.setNegativeButton("Cancel", null);
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        AlertDialog tagDialog = builder.create();
+        tagDialog.show();
     }
 
     public void onClickSaveRun(View view) {

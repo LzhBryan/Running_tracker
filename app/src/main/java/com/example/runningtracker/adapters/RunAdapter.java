@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -22,26 +23,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
-    private List<Run> runs;
-    private Context context;
-    private LayoutInflater layoutInflater;
-    private RunViewModel runViewModel;
+    private List<Run> allRunningRecords;
+    private final Context context;
+    private final LayoutInflater layoutInflater;
+    private final RunViewModel runViewModel;
 
     public RunAdapter(Context context, RunViewModel runViewModel) {
         this.runViewModel = runViewModel;
-        this.runs = new ArrayList<>();
+        this.allRunningRecords = new ArrayList<>();
         this.context = context;
         layoutInflater =
                 (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
-    public void setRuns(List<Run> runs) {
-        if (this.runs != null) {
-            this.runs.clear();
-            this.runs.addAll(runs);
+    public void setAllRunningRecords(List<Run> allRunningRecords) {
+        if (this.allRunningRecords != null) {
+            this.allRunningRecords.clear();
+            this.allRunningRecords.addAll(allRunningRecords);
             notifyDataSetChanged();
         } else {
-            this.runs = runs;
+            this.allRunningRecords = allRunningRecords;
         }
     }
 
@@ -55,12 +56,12 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
 
     @Override
     public void onBindViewHolder(RunViewHolder holder, int position) {
-        holder.bind(runs.get(position));
+        holder.bind(allRunningRecords.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return runs.size();
+        return allRunningRecords.size();
     }
 
     class RunViewHolder extends RecyclerView.ViewHolder {
@@ -69,8 +70,8 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
         private TextView averagePace;
         private TextView additionalNotes;
         private TextView tags;
-        private Button update;
-        private Button delete;
+        private Button updateRecordBtn;
+        private Button deleteRecordBtn;
 
         public RunViewHolder(View itemView) {
             super(itemView);
@@ -79,13 +80,13 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
             averagePace = itemView.findViewById(R.id.averagePaceResultText);
             additionalNotes = itemView.findViewById(R.id.runNotes);
             tags = itemView.findViewById(R.id.runTags);
-            update = itemView.findViewById(R.id.updateRecord);
-            delete = itemView.findViewById(R.id.deleteRecord);
+            updateRecordBtn = itemView.findViewById(R.id.updateRecord);
+            deleteRecordBtn = itemView.findViewById(R.id.deleteRecord);
         }
 
-        void bind(final Run run) {
-            if (run != null) {
-                int totalTime = run.getRunDuration();
+        void bind(final Run runRecord) {
+            if (runRecord != null) {
+                int totalTime = runRecord.getRunDuration();
                 int totalHour = totalTime / 3600;
                 int totalMinute = (totalTime - (3600 * totalHour)) / 60;
                 int totalSeconds =
@@ -94,26 +95,27 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
                 duration.setText(String.format("Duration: %02d:%02d:%02d",
                         totalHour, totalMinute, totalSeconds));
                 totalDistance.setText(String.format("Total distance: %.2f km",
-                        run.getTotalDistance()));
+                        runRecord.getTotalDistance()));
                 averagePace.setText(String.format("Average pace: %.2f min/km",
-                        run.getAveragePace()));
+                        runRecord.getAveragePace()));
                 additionalNotes.setText(String.format("Notes: %s",
-                        run.getAdditionalNote()));
-                if (run.getTags() != null) {
-                    tags.setText(String.format("Tags: %s", run.getTags().toString()));
+                        runRecord.getAdditionalNote()));
+
+                if (runRecord.getTags() != null) {
+                    tags.setText(String.format("Tags: %s", runRecord.getTags().toString()));
                 } else {
                     tags.setText("Tags: ");
                 }
-                update.setOnClickListener(v -> {
-                    ArrayList<String> selectedItems = new ArrayList<>();
+                updateRecordBtn.setOnClickListener(v -> {
+                    ArrayList<String> selectedTags = new ArrayList<>();
                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
                     builder.setTitle("Modify notes");
-                    final EditText input = new EditText(context);
-                    input.setInputType(InputType.TYPE_CLASS_TEXT);
-                    input.setText(run.getAdditionalNote());
-                    builder.setView(input);
+                    final EditText notesInput = new EditText(context);
+                    notesInput.setInputType(InputType.TYPE_CLASS_TEXT);
+                    notesInput.setText(runRecord.getAdditionalNote());
+                    builder.setView(notesInput);
                     builder.setPositiveButton("Next", (dialog, which) -> {
-                        String userInput = input.getText().toString();
+                        String notes = notesInput.getText().toString();
 
                         AlertDialog.Builder innerBuilder =
                                 new AlertDialog.Builder(context);
@@ -121,29 +123,37 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
                         innerBuilder.setMultiChoiceItems(RunResultActivity.tags.toArray(new CharSequence[RunResultActivity.tags.size()]),
                                 null, (innerDialog, innerWhich, isChecked) -> {
                                     if (isChecked) {
-                                        selectedItems.add(RunResultActivity.tags.get(innerWhich));
-                                    } else if (selectedItems.contains(RunResultActivity.tags.get(innerWhich))) {
-                                        selectedItems.remove(RunResultActivity.tags.get(innerWhich));
+                                        selectedTags.add(RunResultActivity.tags.get(innerWhich));
+                                    } else if (selectedTags.contains(RunResultActivity.tags.get(innerWhich))) {
+                                        selectedTags.remove(RunResultActivity.tags.get(innerWhich));
                                     }
                                 });
-                        innerBuilder.setPositiveButton("OK",
-                                (innerDialog, innerWhich) -> runViewModel.update(run.getRunId(), userInput
-                                        , selectedItems));
+                        innerBuilder.setPositiveButton("Update",
+                                (innerDialog, innerWhich) -> runViewModel.update(runRecord.getRunId(), notes
+                                        , selectedTags));
                         innerBuilder.setNegativeButton("Cancel", (dialog1, which1) -> {
-                            if (!userInput.equals("") && !userInput.equals(run.getAdditionalNote())) {
-                                runViewModel.update(run.getRunId(), userInput
-                                        , run.getTags());
+                            // only update notes if user make changes to notes
+                            if (!notes.equals("") && !notes.equals(runRecord.getAdditionalNote())) {
+                                runViewModel.update(runRecord.getRunId(), notes
+                                        , runRecord.getTags());
+                                Toast.makeText(context, "Successfully updated" +
+                                                " this run record",
+                                        Toast.LENGTH_SHORT).show();
                             }
                         });
-                        AlertDialog innerDialog = innerBuilder.create();
-                        innerDialog.show();
-
+                        AlertDialog tagDialog = innerBuilder.create();
+                        tagDialog.show();
                     });
                     builder.setNegativeButton("Cancel", null);
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
+                    AlertDialog notesDialog = builder.create();
+                    notesDialog.show();
                 });
-                delete.setOnClickListener(v -> runViewModel.delete(run));
+
+                deleteRecordBtn.setOnClickListener(v -> {
+                    runViewModel.delete(runRecord);
+                    Toast.makeText(context, "Successfully deleted this run record",
+                            Toast.LENGTH_SHORT).show();
+                });
             }
         }
     }

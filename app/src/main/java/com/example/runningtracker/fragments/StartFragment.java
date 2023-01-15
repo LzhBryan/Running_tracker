@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -38,14 +37,14 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class StartFragment extends Fragment {
-    private static final int REQUEST_CHECK_SETTINGS = 101;
     public static final String TOTAL_DISTANCE = "TOTAL_DISTANCE";
     public static final String AVERAGE_PACE = "AVERAGE_PACE";
     public static final String TOTAL_TIME = "TOTAL_TIME";
+    private static final int REQUEST_CHECK_SETTINGS = 101;
     public static final int REQUEST_STOP_SERVICE = 1;
     private StartFragmentViewModel startFragmentViewModel;
-    private ImageButton serviceButton;
-    private ImageButton stopButton;
+    private ImageButton serviceBtn;
+    private ImageButton stopBtn;
     private TextView trackingCounter;
     private TextView averagePace;
     private TextView totalDistance;
@@ -63,24 +62,21 @@ public class StartFragment extends Fragment {
             switchToPlayBtn();
         }
 
-        final Observer<Integer> trackingCounterObserver =
-                lambda -> {
-                    int trackSeconds =
-                            startFragmentViewModel.getTrackingCounter().getValue();
-                    int trackHour = trackSeconds / 3600;
-                    int trackMinute = (trackSeconds - (3600 * trackHour)) / 60;
-                    trackSeconds =
-                            (trackSeconds - (3600 * trackHour) - (trackMinute * 60));
-                    trackingCounter.setText(String.format("%02d:%02d:%02d",
-                            trackHour, trackMinute, trackSeconds));
-                };
+        final Observer<Integer> trackingCounterObserver = lambda -> {
+            int trackSeconds = startFragmentViewModel.getTrackingCounter().getValue();
+            int trackHour = trackSeconds / 3600;
+            int trackMinute = (trackSeconds - (3600 * trackHour)) / 60;
+            trackSeconds = (trackSeconds - (3600 * trackHour) - (trackMinute * 60));
+            trackingCounter.setText(String.format("%02d:%02d:%02d",
+                    trackHour, trackMinute, trackSeconds));
+        };
 
-        final Observer<Float> trackingPaceObserver =
-                lambda -> averagePace.setText(String.format("%.2f minute/km",
+        final Observer<Float> trackingPaceObserver = lambda ->
+                averagePace.setText(String.format("%.2f min/km",
                         startFragmentViewModel.getTrackingPace().getValue()));
 
-        final Observer<Float> totalDistanceObserver =
-                lambda -> totalDistance.setText(String.format("%.2f km",
+        final Observer<Float> totalDistanceObserver = lambda ->
+                totalDistance.setText(String.format("%.2f km",
                         startFragmentViewModel.getTotalDistance().getValue() / 1000));
 
         startFragmentViewModel.getTrackingCounter().observe(getViewLifecycleOwner(), trackingCounterObserver);
@@ -89,22 +85,22 @@ public class StartFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        FragmentStartBinding binding = FragmentStartBinding.inflate(inflater,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        FragmentStartBinding startBinding = FragmentStartBinding.inflate(inflater,
                 container, false);
         startFragmentViewModel =
                 new ViewModelProvider(requireActivity()).get(StartFragmentViewModel.class);
-        binding.setFragment(this);
-        View rootView = binding.getRoot();
-        serviceButton = rootView.findViewById(R.id.service);
-        stopButton = rootView.findViewById(R.id.stop);
+        startBinding.setFragment(this);
+        View rootView = startBinding.getRoot();
+
+        serviceBtn = rootView.findViewById(R.id.service);
+        stopBtn = rootView.findViewById(R.id.stop);
         trackingCounter = rootView.findViewById(R.id.trackingCounter);
         averagePace = rootView.findViewById(R.id.averagePace);
         totalDistance = rootView.findViewById(R.id.totalDistance);
-        requireActivity().bindService(new Intent(requireActivity(),
-                        TrackingService.class), startFragmentViewModel.getServiceConnection(),
-                Context.BIND_AUTO_CREATE);
+
+        requireActivity().bindService(new Intent(requireActivity(), TrackingService.class),
+                startFragmentViewModel.getServiceConnection(), Context.BIND_AUTO_CREATE);
         return rootView;
     }
 
@@ -140,48 +136,44 @@ public class StartFragment extends Fragment {
         startFragmentViewModel.setServiceOnPause(true);
         requireActivity().unbindService(startFragmentViewModel.getServiceConnection());
         startFragmentViewModel.setMyService(null);
-        Intent runResultIntent = new Intent(requireActivity(),
-                RunResultActivity.class);
-        runResultIntent.putExtra(TOTAL_DISTANCE,
-                startFragmentViewModel.getTotalDistance().getValue());
+        Intent runResultIntent = new Intent(requireActivity(), RunResultActivity.class);
+        runResultIntent.putExtra(TOTAL_DISTANCE, startFragmentViewModel.getTotalDistance().getValue());
         runResultIntent.putExtra(AVERAGE_PACE, startFragmentViewModel.getTrackingPace().getValue());
         runResultIntent.putExtra(TOTAL_TIME, startFragmentViewModel.getTrackingCounter().getValue());
         startActivityForResult(runResultIntent, REQUEST_STOP_SERVICE);
     }
 
     private void switchToPlayBtn() {
-        serviceButton.setImageResource(R.drawable.btn_play);
+        serviceBtn.setImageResource(R.drawable.btn_play);
         if (!startFragmentViewModel.getIsServiceRunning()) {
-            stopButton.setEnabled(false);
-            stopButton.setAlpha(.5f);
-            stopButton.setClickable(false);
+            stopBtn.setEnabled(false);
+            stopBtn.setAlpha(.5f);
+            stopBtn.setClickable(false);
         }
     }
 
     private void switchToPauseBtn() {
-        serviceButton.setImageResource(R.drawable.btn_pause);
-        stopButton.setEnabled(true);
-        stopButton.setAlpha(1f);
-        stopButton.setClickable(true);
+        serviceBtn.setImageResource(R.drawable.btn_pause);
+        stopBtn.setEnabled(true);
+        stopBtn.setAlpha(1f);
+        stopBtn.setClickable(true);
     }
 
     private void checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(
-                requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(requireActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             startFragmentViewModel.setLocationPermissionGranted(true);
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
             new MaterialAlertDialogBuilder(requireActivity(), R.style.RoundShapeTheme)
                     .setTitle("Location Permission Needed")
-                    .setMessage("This app needs the Location permission, please accept to use location functionality")
+                    .setMessage("This app needs the Location permission, " +
+                            "please accept to use location functionality")
                     .setPositiveButton("OK", (dialogInterface, i) ->
-                            requestPermissionLauncher.launch(
-                                    Manifest.permission.ACCESS_FINE_LOCATION))
+                            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION))
                     .create()
                     .show();
         } else {
-            requestPermissionLauncher.launch(
-                    Manifest.permission.ACCESS_FINE_LOCATION);
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
         }
     }
 
@@ -193,10 +185,8 @@ public class StartFragment extends Fragment {
                     new MaterialAlertDialogBuilder(requireActivity(),
                             R.style.RoundShapeTheme)
                             .setTitle("Location permission needed")
-                            .setMessage("Can't track your running without " +
-                                    "location access")
-                            .setPositiveButton("OK", (dialogInterface, i) ->
-                                    dialogInterface.cancel())
+                            .setMessage("Can't track your running without " + "location access")
+                            .setPositiveButton("OK", (dialogInterface, i) -> dialogInterface.cancel())
                             .create()
                             .show();
                     startFragmentViewModel.setLocationPermissionGranted(false);
@@ -205,8 +195,8 @@ public class StartFragment extends Fragment {
 
     protected void createLocationRequest() {
         LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
+        locationRequest.setInterval(100);
+        locationRequest.setFastestInterval(500);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(locationRequest);
@@ -227,8 +217,7 @@ public class StartFragment extends Fragment {
             if (e instanceof ResolvableApiException) {
                 try {
                     ResolvableApiException resolvable = (ResolvableApiException) e;
-                    resolvable.startResolutionForResult(requireActivity(),
-                            REQUEST_CHECK_SETTINGS);
+                    resolvable.startResolutionForResult(requireActivity(), REQUEST_CHECK_SETTINGS);
                 } catch (IntentSender.SendIntentException sendEx) {
                     sendEx.printStackTrace();
                 }
@@ -242,23 +231,20 @@ public class StartFragment extends Fragment {
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             if (resultCode == Activity.RESULT_OK) {
                 startFragmentViewModel.setGpsOn(true);
-                requireActivity().startForegroundService(new Intent(requireActivity()
-                        , TrackingService.class));
+                requireActivity().startForegroundService(new Intent(requireActivity(),
+                        TrackingService.class));
                 switchToPauseBtn();
                 startFragmentViewModel.setServiceRunning(true);
                 startFragmentViewModel.setServiceOnPause(false);
             }
         } else if (requestCode == REQUEST_STOP_SERVICE) {
             if (resultCode == Activity.RESULT_OK) {
-                boolean isServiceRunning =
-                        data.getBooleanExtra(RunResultActivity.SERVICE_STATUS
-                                , true);
+                boolean isServiceRunning = data.getBooleanExtra(RunResultActivity.SERVICE_STATUS, true);
                 if (!isServiceRunning) {
                     startFragmentViewModel.setServiceOnPause(false);
                     startFragmentViewModel.setServiceRunning(false);
                     startFragmentViewModel.setTotalDistance(0);
-                    startFragmentViewModel
-                            .setTrackingCounter(0);
+                    startFragmentViewModel.setTrackingCounter(0);
                     startFragmentViewModel.setTrackingPace(0);
                 }
             }
@@ -274,9 +260,8 @@ public class StartFragment extends Fragment {
             startFragmentViewModel.setTrackingCounter(0);
         }
         if (startFragmentViewModel.getMyService() == null) {
-            requireActivity().bindService(new Intent(requireActivity(),
-                            TrackingService.class), startFragmentViewModel.getServiceConnection(),
-                    Context.BIND_AUTO_CREATE);
+            requireActivity().bindService(new Intent(requireActivity(), TrackingService.class),
+                    startFragmentViewModel.getServiceConnection(), Context.BIND_AUTO_CREATE);
         }
         super.onResume();
     }

@@ -1,13 +1,10 @@
 package com.example.runningtracker.db;
 
-import android.database.Cursor;
-
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
-import androidx.room.Update;
 
 import com.example.runningtracker.models.Run;
 
@@ -28,7 +25,4 @@ public interface RunDao {
 
     @Delete
     void delete(Run run);
-
-    @Query("SELECT * FROM run_table")
-    Cursor getAllRuns();
 }

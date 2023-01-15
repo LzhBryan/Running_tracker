@@ -28,7 +28,9 @@
             android:layout_columnSpan="2"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:text="@string/time" />
+            android:layout_marginTop="20sp"
+            android:text="@string/time"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/trackingCounter"
@@ -37,7 +39,8 @@
             android:layout_rowWeight="1"
             android:layout_columnSpan="2"
             android:layout_columnWeight="1"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            android:textSize="30sp" />
 
         <TextView
             android:id="@+id/distanceText"
@@ -46,8 +49,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:textSize="30sp"
-            android:text="@string/distance" />
+            android:layout_marginStart="40sp"
+            android:text="@string/distance"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/averagePaceText"
@@ -56,8 +60,8 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
-            android:textSize="30sp"
-            android:text="@string/average_pace" />
+            android:text="@string/average_pace"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/totalDistance"
@@ -66,8 +70,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_gravity="center"
+            android:layout_marginStart="40sp"
             android:layout_marginBottom="40sp"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
 
         <TextView
             android:id="@+id/averagePace"
@@ -77,34 +82,34 @@
             android:layout_columnWeight="1"
             android:layout_gravity="center"
             android:layout_marginBottom="40sp"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
 
         <ImageButton
             android:id="@+id/service"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_marginEnd="50sp"
-            android:layout_marginBottom="50sp"
+            android:layout_marginEnd="10sp"
+            android:layout_marginBottom="40sp"
             android:background="@color/white"
+            android:contentDescription="@string/play_or_pause_button"
             android:onClick="@{() -> fragment.onClickRun()}"
-            android:scaleX="2"
-            android:scaleY="2"
-            android:contentDescription="@string/play_or_pause_button" />
+            android:scaleX="1.5"
+            android:scaleY="1.5" />
 
         <ImageButton
             android:id="@+id/stop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginStart="50sp"
-            android:layout_marginBottom="50sp"
+            android:layout_marginStart="100sp"
+            android:layout_marginBottom="40sp"
             android:background="@color/white"
+            android:contentDescription="@string/stop_button"
             android:onClick="@{() -> fragment.onClickStop()}"
-            android:scaleX="2.7"
-            android:scaleY="2.7"
-            android:src="@drawable/btn_stop"
-            android:contentDescription="@string/stop_button" />
+            android:scaleX="2"
+            android:scaleY="2"
+            android:src="@drawable/btn_stop" />
 
     </GridLayout>
 </layout>
