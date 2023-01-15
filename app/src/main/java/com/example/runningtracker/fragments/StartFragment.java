@@ -267,7 +267,12 @@ public class StartFragment extends Fragment {
 
     @Override
     public void onResume() {
-        switchToPlayBtn();
+        if (!startFragmentViewModel.getIsServiceRunning()) {
+            switchToPlayBtn();
+            startFragmentViewModel.setTrackingPace(0);
+            startFragmentViewModel.setTotalDistance(0);
+            startFragmentViewModel.setTrackingCounter(0);
+        }
         if (startFragmentViewModel.getMyService() == null) {
             requireActivity().bindService(new Intent(requireActivity(),
                             TrackingService.class), startFragmentViewModel.getServiceConnection(),

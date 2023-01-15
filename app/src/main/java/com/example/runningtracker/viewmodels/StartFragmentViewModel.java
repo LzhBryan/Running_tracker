@@ -130,5 +130,10 @@ public class StartFragmentViewModel extends ViewModel {
         public void trackingDistanceEvent(float totalDistance) {
             setTotalDistance(totalDistance);
         }
+
+        @Override
+        public void trackingServiceStatus(boolean isServiceRunning) {
+            setServiceRunning(isServiceRunning);
+        }
     };
 }

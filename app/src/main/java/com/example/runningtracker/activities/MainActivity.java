@@ -8,10 +8,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.example.runningtracker.R;
-import com.example.runningtracker.fragments.DashboardFragment;
 import com.example.runningtracker.fragments.MeFragment;
 import com.example.runningtracker.fragments.StartFragment;
-import com.example.runningtracker.fragments.TargetFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,14 +36,8 @@ public class MainActivity extends AppCompatActivity {
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
             switch (item.getItemId()) {
-                case R.id.dashboard:
-                    switchFragment(new DashboardFragment());
-                    break;
                 case R.id.start:
                     switchFragment(new StartFragment());
-                    break;
-                case R.id.target:
-                    switchFragment(new TargetFragment());
                     break;
                 case R.id.me:
                     switchFragment(new MeFragment());

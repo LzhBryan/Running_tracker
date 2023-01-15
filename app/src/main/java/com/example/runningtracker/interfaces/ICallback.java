@@ -6,4 +6,6 @@ public interface ICallback {
     void trackingPaceEvent(float averagePace);
 
     void trackingDistanceEvent(float totalDistance);
+
+    void trackingServiceStatus(boolean isServiceRunning);
 }

@@ -62,8 +62,9 @@ public class TrackingService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         int stop = intent.getIntExtra(RunResultActivity.STOP_SERVICE, 0);
         if (stop == 1) {
-            trackingThread.interrupt();
             running = false;
+            doCallbacks();
+            trackingThread.interrupt();
             trackingThread = null;
             fusedLocationClient.removeLocationUpdates(locationCallback);
             stopForeground(true);
@@ -178,6 +179,7 @@ public class TrackingService extends Service {
             remoteCallbackList.getBroadcastItem(i).callback.trackingTimeEvent(trackingSeconds);
             remoteCallbackList.getBroadcastItem(i).callback.trackingPaceEvent(trackingPace);
             remoteCallbackList.getBroadcastItem(i).callback.trackingDistanceEvent(distance);
+            remoteCallbackList.getBroadcastItem(i).callback.trackingServiceStatus(running);
         }
         remoteCallbackList.finishBroadcast();
     }
