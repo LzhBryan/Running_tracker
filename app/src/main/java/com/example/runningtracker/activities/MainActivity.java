@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.example.runningtracker.R;
 import com.example.runningtracker.fragments.MeFragment;
@@ -48,10 +49,48 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
+            finish();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     private void switchFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment, null)
-                .setReorderingAllowed(true).commit();
+        String meFragmentClassName = "com.example.runningtracker" +
+                ".fragments.MeFragment";
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        Fragment meFragment =
+                fragmentManager.findFragmentByTag(meFragmentClassName);
+
+        if (meFragment != null && fragment.getClass().getName().equals(meFragmentClassName)) {
+            System.out.println("yay");
+            fragmentManager.beginTransaction().replace(R.id.fragment_container, meFragment, meFragmentClassName).commit();
+        } else {
+
+//        if (fragment.getClass().getName().equals(meFragmentClassName)) {
+//            if (fragmentManager.findFragmentByTag(meFragmentClassName) != null) {
+//                getSupportFragmentManager().beginTransaction().show(getSupportFragmentManager().findFragmentByTag(meFragmentClassName)).commit();
+//            } else {
+//                getSupportFragmentManager().beginTransaction()
+//                        .replace(R.id.fragment_container, fragment,
+//                                fragment.getClass().getName())
+//                        .setReorderingAllowed(true)
+//                        .addToBackStack(fragment.getClass().getName())
+//                        .commit();
+//            }
+//        } else {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, fragment,
+                            fragment.getClass().getName())
+                    .setReorderingAllowed(true)
+                    .addToBackStack(fragment.getClass().getName())
+                    .commit();
+//        }
+        }
     }
 
     @Override

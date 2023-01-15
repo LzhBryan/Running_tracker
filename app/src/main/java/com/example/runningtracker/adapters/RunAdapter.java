@@ -84,65 +84,67 @@ public class RunAdapter extends RecyclerView.Adapter<RunAdapter.RunViewHolder> {
         }
 
         void bind(final Run run) {
-            int totalTime = run.getRunDuration();
-            int totalHour = totalTime / 3600;
-            int totalMinute = (totalTime - (3600 * totalHour)) / 60;
-            int totalSeconds =
-                    (totalTime - (3600 * totalHour) - (totalMinute * 60));
+            if (run != null) {
+                int totalTime = run.getRunDuration();
+                int totalHour = totalTime / 3600;
+                int totalMinute = (totalTime - (3600 * totalHour)) / 60;
+                int totalSeconds =
+                        (totalTime - (3600 * totalHour) - (totalMinute * 60));
 
-            duration.setText(String.format("Duration: %02d:%02d:%02d",
-                    totalHour, totalMinute, totalSeconds));
-            totalDistance.setText(String.format("Total distance: %.2f km",
-                    run.getTotalDistance()));
-            averagePace.setText(String.format("Average pace: %.2f min/km",
-                    run.getAveragePace()));
-            additionalNotes.setText(String.format("Notes: %s",
-                    run.getAdditionalNote()));
-            if (run.getTags() != null) {
-                tags.setText(String.format("Tags: %s", run.getTags().toString()));
-            } else {
-                tags.setText("Tags: ");
-            }
-            update.setOnClickListener(v -> {
-                ArrayList<String> selectedItems = new ArrayList<>();
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setTitle("Modify notes");
-                final EditText input = new EditText(context);
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                input.setText(run.getAdditionalNote());
-                builder.setView(input);
-                builder.setPositiveButton("Next", (dialog, which) -> {
-                    String userInput = input.getText().toString();
+                duration.setText(String.format("Duration: %02d:%02d:%02d",
+                        totalHour, totalMinute, totalSeconds));
+                totalDistance.setText(String.format("Total distance: %.2f km",
+                        run.getTotalDistance()));
+                averagePace.setText(String.format("Average pace: %.2f min/km",
+                        run.getAveragePace()));
+                additionalNotes.setText(String.format("Notes: %s",
+                        run.getAdditionalNote()));
+                if (run.getTags() != null) {
+                    tags.setText(String.format("Tags: %s", run.getTags().toString()));
+                } else {
+                    tags.setText("Tags: ");
+                }
+                update.setOnClickListener(v -> {
+                    ArrayList<String> selectedItems = new ArrayList<>();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("Modify notes");
+                    final EditText input = new EditText(context);
+                    input.setInputType(InputType.TYPE_CLASS_TEXT);
+                    input.setText(run.getAdditionalNote());
+                    builder.setView(input);
+                    builder.setPositiveButton("Next", (dialog, which) -> {
+                        String userInput = input.getText().toString();
 
-                    AlertDialog.Builder innerBuilder =
-                            new AlertDialog.Builder(context);
-                    innerBuilder.setTitle("Modify tags");
-                    innerBuilder.setMultiChoiceItems(RunResultActivity.tags.toArray(new CharSequence[RunResultActivity.tags.size()]),
-                            null, (innerDialog, innerWhich, isChecked) -> {
-                                if (isChecked) {
-                                    selectedItems.add(RunResultActivity.tags.get(innerWhich));
-                                } else if (selectedItems.contains(RunResultActivity.tags.get(innerWhich))) {
-                                    selectedItems.remove(RunResultActivity.tags.get(innerWhich));
-                                }
-                            });
-                    innerBuilder.setPositiveButton("OK",
-                            (innerDialog, innerWhich) -> runViewModel.update(run.getRunId(), userInput
-                                    , selectedItems));
-                    innerBuilder.setNegativeButton("Cancel", (dialog1, which1) -> {
-                        if (!userInput.equals("") && !userInput.equals(run.getAdditionalNote())) {
-                            runViewModel.update(run.getRunId(), userInput
-                                    , run.getTags());
-                        }
+                        AlertDialog.Builder innerBuilder =
+                                new AlertDialog.Builder(context);
+                        innerBuilder.setTitle("Modify tags");
+                        innerBuilder.setMultiChoiceItems(RunResultActivity.tags.toArray(new CharSequence[RunResultActivity.tags.size()]),
+                                null, (innerDialog, innerWhich, isChecked) -> {
+                                    if (isChecked) {
+                                        selectedItems.add(RunResultActivity.tags.get(innerWhich));
+                                    } else if (selectedItems.contains(RunResultActivity.tags.get(innerWhich))) {
+                                        selectedItems.remove(RunResultActivity.tags.get(innerWhich));
+                                    }
+                                });
+                        innerBuilder.setPositiveButton("OK",
+                                (innerDialog, innerWhich) -> runViewModel.update(run.getRunId(), userInput
+                                        , selectedItems));
+                        innerBuilder.setNegativeButton("Cancel", (dialog1, which1) -> {
+                            if (!userInput.equals("") && !userInput.equals(run.getAdditionalNote())) {
+                                runViewModel.update(run.getRunId(), userInput
+                                        , run.getTags());
+                            }
+                        });
+                        AlertDialog innerDialog = innerBuilder.create();
+                        innerDialog.show();
+
                     });
-                    AlertDialog innerDialog = innerBuilder.create();
-                    innerDialog.show();
-
+                    builder.setNegativeButton("Cancel", null);
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
                 });
-                builder.setNegativeButton("Cancel", null);
-                AlertDialog dialog = builder.create();
-                dialog.show();
-            });
-            delete.setOnClickListener(v -> runViewModel.delete(run));
+                delete.setOnClickListener(v -> runViewModel.delete(run));
+            }
         }
     }
 }
